@@ -69,7 +69,8 @@ const FloatingImage = () => {
                   onMouseEnter={handleMouseLeave}
                   src="/img/entrance.jpeg"
                   alt="blockchain-ticketing.webp"
-                  className="object-contain"
+                  className=" object-contain"
+                  style={{ width: "600px", height: "300px" }}
                 />
               </div>
             </div>
