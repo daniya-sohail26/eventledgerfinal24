@@ -2,18 +2,18 @@ import clsx from "clsx";
 import gsap from "gsap";
 import { useWindowScroll } from "react-use";
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { TiLocationArrow } from "react-icons/ti";
 import { FaUserCircle } from "react-icons/fa";
-
 import Button from "./Button";
 
 const navItems = ["Features", "About", "Contact"];
 
 const NavBar = () => {
+  const navigate = useNavigate();
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [isIndicatorActive, setIsIndicatorActive] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
   const audioElementRef = useRef(null);
   const navContainerRef = useRef(null);
 
@@ -55,6 +55,10 @@ const NavBar = () => {
       duration: 0.2,
     });
   }, [isNavVisible]);
+
+  const handleStateRepLogin = () => {
+    navigate("/state-representative-dashboard");
+  };
 
   return (
     <div
@@ -122,12 +126,12 @@ const NavBar = () => {
                   >
                     Login as Event Host
                   </a>
-                  <a
-                    href="/state-representative-login"
-                    className="block px-4 py-2 hover:bg-yellow-400"
+                  <button
+                    onClick={handleStateRepLogin}
+                    className="block w-full text-left px-4 py-2 hover:bg-yellow-400"
                   >
                     Login as State Representative
-                  </a>
+                  </button>
                 </div>
               )}
             </div>
