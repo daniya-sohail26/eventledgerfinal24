@@ -1,0 +1,38 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract DocumentVerification {
+    address public constant STATE_REP = 0x22337e5460376f59113a30052869D9C073897BFA; // Authorized State Representative
+    string private documentCID; // Stores the document CID
+
+    event DocumentUploaded(address indexed stateRep, string cid); // Event for tracking uploads
+
+    // Modifier to ensure only the approved State Representative can call the function
+    modifier onlyStateRep() {
+        require(msg.sender == STATE_REP, "Only the approved state representative can upload documents");
+        _;
+    }
+
+    // Function to upload document CID (only for the approved State Representative)
+    function uploadDocumentByStateRep(string memory _cid) public onlyStateRep {
+        require(bytes(_cid).length > 0, "CID cannot be empty");
+
+        // Store the CID
+        documentCID = _cid;
+
+        // Emit an event to log the transaction
+        emit DocumentUploaded(msg.sender, _cid);
+    }
+
+    // Function to retrieve the document CID
+    function getDocumentCID() public view returns (string memory) {
+        require(bytes(documentCID).length > 0, "No document found");
+        return documentCID;
+    }
+}
+
+
+
+
+
+deployed_address:0xfF4Fbe78f09F35d20AD43bc550C42Fed335B61E0
