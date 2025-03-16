@@ -57,8 +57,9 @@ const NavBar = () => {
   }, [isNavVisible]);
 
   const handleStateRepLogin = () => {
-    navigate("/state-representative-dashboard");
+    navigate("/login");
   };
+
 
   return (
     <div

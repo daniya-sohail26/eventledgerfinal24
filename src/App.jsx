@@ -7,6 +7,8 @@ import Story from "./components/Story";
 import Contact from "./components/Contact";
 import Footer from "./components/Footer";
 import Dashboard from "./components/stateRepresentative/Dashboard";
+import Login from "./components/Login";
+import PrivateRoute from "./components/PrivateRoute";
 
 function App() {
   return (
@@ -27,11 +29,16 @@ function App() {
             </>
           }
         />
-        <Route path="/state-representative-dashboard" element={<Dashboard />} />
+        <Route path="/login" element={<Login />} />
+        <Route element={<PrivateRoute />}>
+          <Route
+            path="/state-representative-dashboard"
+            element={<Dashboard />}
+          />
+        </Route>
       </Routes>
     </main>
   );
 }
 
-// ✅ Make sure you have this export
 export default App;
