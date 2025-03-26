@@ -3,7 +3,6 @@ import gsap from "gsap";
 import { useWindowScroll } from "react-use";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { TiLocationArrow } from "react-icons/ti";
 import { FaUserCircle } from "react-icons/fa";
 import Button from "./Button";
 
@@ -11,28 +10,12 @@ const navItems = ["Features", "About", "Contact"];
 
 const NavBar = () => {
   const navigate = useNavigate();
-  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
-  const [isIndicatorActive, setIsIndicatorActive] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const audioElementRef = useRef(null);
   const navContainerRef = useRef(null);
 
   const { y: currentScrollY } = useWindowScroll();
   const [isNavVisible, setIsNavVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
-
-  const toggleAudioIndicator = () => {
-    setIsAudioPlaying((prev) => !prev);
-    setIsIndicatorActive((prev) => !prev);
-  };
-
-  useEffect(() => {
-    if (isAudioPlaying) {
-      audioElementRef.current.play();
-    } else {
-      audioElementRef.current.pause();
-    }
-  }, [isAudioPlaying]);
 
   useEffect(() => {
     if (currentScrollY === 0) {
@@ -60,6 +43,9 @@ const NavBar = () => {
     navigate("/login");
   };
 
+  const handleEventHostLogin = () => {
+    navigate("/event-host-login");
+  };
 
   return (
     <div
@@ -85,27 +71,6 @@ const NavBar = () => {
               ))}
             </div>
 
-            <button
-              onClick={toggleAudioIndicator}
-              className="flex items-center space-x-0.5"
-            >
-              <audio
-                ref={audioElementRef}
-                className="hidden"
-                src="/audio/loop.mp3"
-                loop
-              />
-              {[1, 2, 3, 4].map((bar) => (
-                <div
-                  key={bar}
-                  className={clsx("indicator-line", {
-                    active: isIndicatorActive,
-                  })}
-                  style={{ animationDelay: `${bar * 0.1}s` }}
-                />
-              ))}
-            </button>
-
             <div className="relative">
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -117,19 +82,19 @@ const NavBar = () => {
                 <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-800 rounded-lg shadow-lg">
                   <a
                     href="/buyer-login"
-                    className="block px-4 py-2 hover:bg-yellow-400"
+                    className="block px-4 py-2 hover:bg-purple-400"
                   >
                     Login as Buyer
                   </a>
-                  <a
-                    href="/event-host-login"
-                    className="block px-4 py-2 hover:bg-yellow-400"
+                  <button
+                    onClick={handleEventHostLogin}
+                    className="block w-full text-left px-4 py-2 hover:bg-purple-400"
                   >
                     Login as Event Host
-                  </a>
+                  </button>
                   <button
                     onClick={handleStateRepLogin}
-                    className="block w-full text-left px-4 py-2 hover:bg-yellow-400"
+                    className="block w-full text-left px-4 py-2 hover:bg-purple-400"
                   >
                     Login as State Representative
                   </button>

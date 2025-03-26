@@ -99,12 +99,13 @@ export const BentoCard = ({ src, title, description, isComingSoon }) => {
 };
 
 const Features = () => (
-  <section id ="features" className="bg-black pb-52">
+  <section id="features" className="bg-black pb-52">
     <div className="container mx-auto px-3 md:px-10">
       <div className="px-5 py-32">
-        <p className="font-circular-web text-lg text-blue-50">
-          <b>Explore Features</b>
+        <p className="font-circular-web text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-300 drop-shadow-lg pb-2">
+          Explore Features
         </p>
+
         <p className="max-w-md font-circular-web text-lg text-blue-50 opacity-50">
           Step into the future of event management with Event Ledger—a
           decentralized platform integrating NFT ticketing, blockchain-based

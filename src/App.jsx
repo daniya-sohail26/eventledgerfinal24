@@ -9,6 +9,9 @@ import Footer from "./components/Footer";
 import Dashboard from "./components/stateRepresentative/Dashboard";
 import Login from "./components/Login";
 import PrivateRoute from "./components/PrivateRoute";
+import EventHostLogin from "./components/eventHost/EventHostLogin";
+import EventHostRegistration from "./components/eventHost/EventHostRegistration";
+
 
 function App() {
   return (
@@ -30,6 +33,8 @@ function App() {
           }
         />
         <Route path="/login" element={<Login />} />
+        <Route path="/event-host-login" element={<EventHostLogin />} />
+        <Route path="/register" element={<EventHostRegistration />} />
         <Route element={<PrivateRoute />}>
           <Route
             path="/state-representative-dashboard"
