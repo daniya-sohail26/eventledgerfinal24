@@ -11,6 +11,7 @@ import Login from "./components/Login";
 import PrivateRoute from "./components/PrivateRoute";
 import EventHostLogin from "./components/eventHost/EventHostLogin";
 import EventHostRegistration from "./components/eventHost/EventHostRegistration";
+import EventCreationProcess from "./components/eventHost/EventCreationProcess";
 
 
 function App() {
@@ -35,6 +36,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/event-host-login" element={<EventHostLogin />} />
         <Route path="/register" element={<EventHostRegistration />} />
+        <Route path="/create-event" element={<EventCreationProcess />} />
         <Route element={<PrivateRoute />}>
           <Route
             path="/state-representative-dashboard"

@@ -286,9 +286,132 @@
 
 // export default StateRepDashboard;
 
+// import React, { useState } from "react";
+// import { ethers } from "ethers";
+// import axios from "axios";
+
+// const CONTRACT_ADDRESS = "0xfF4Fbe78f09F35d20AD43bc550C42Fed335B61E0";
+// const CONTRACT_ABI = [
+//   {
+//     inputs: [{ internalType: "string", name: "_cid", type: "string" }],
+//     name: "uploadDocumentByStateRep",
+//     outputs: [],
+//     stateMutability: "nonpayable",
+//     type: "function",
+//   },
+// ];
+
+// const PINATA_API_KEY = "e013027f724b2fa4facc";
+// const PINATA_SECRET_API_KEY =
+//   "8e2b3cd91ca4458e8f1d5a67287d6b8bf7c7f8ba8d807b529880370b7dae9505";
+
+// const StateRepDashboard = () => {
+//   const [file, setFile] = useState(null);
+//   const [cid, setCid] = useState("");
+//   const [walletAddress, setWalletAddress] = useState("");
+
+//   const connectWallet = async () => {
+//     try {
+//       if (!window.ethereum) {
+//         alert("MetaMask is not installed. Please install it.");
+//         return;
+//       }
+//       const provider = new ethers.BrowserProvider(window.ethereum);
+//       const signer = await provider.getSigner();
+//       const address = await signer.getAddress();
+//       setWalletAddress(address);
+//     } catch (error) {
+//       console.error("Wallet connection failed:", error);
+//       alert("Failed to connect wallet.");
+//     }
+//   };
+
+//   const uploadToPinata = async () => {
+//     if (!file) return alert("Please select a file to upload");
+//     const formData = new FormData();
+//     formData.append("file", file);
+//     try {
+//       const res = await axios.post(
+//         "https://api.pinata.cloud/pinning/pinFileToIPFS",
+//         formData,
+//         {
+//           headers: {
+//             "Content-Type": "multipart/form-data",
+//             pinata_api_key: PINATA_API_KEY,
+//             pinata_secret_api_key: PINATA_SECRET_API_KEY,
+//           },
+//         }
+//       );
+//       setCid(res.data.IpfsHash);
+//       alert("File uploaded to IPFS successfully");
+//     } catch (err) {
+//       console.error("Error uploading to Pinata", err);
+//       alert("Error uploading file");
+//     }
+//   };
+
+//   const storeOnChain = async () => {
+//     if (!cid) return alert("Upload a file first to get a CID.");
+//     if (!window.ethereum) return alert("MetaMask is required.");
+//     try {
+//       const provider = new ethers.BrowserProvider(window.ethereum);
+//       const signer = await provider.getSigner();
+//       const contract = new ethers.Contract(
+//         CONTRACT_ADDRESS,
+//         CONTRACT_ABI,
+//         signer
+//       );
+//       const tx = await contract.uploadDocumentByStateRep(cid);
+//       await tx.wait();
+//       alert("Document CID stored on blockchain");
+//     } catch (err) {
+//       console.error("Error storing on chain:", err);
+//       alert("Transaction failed.");
+//     }
+//   };
+
+//   return (
+//     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-black to-purple-900 text-white p-6">
+//       <h2 className="text-3xl font-bold mb-6">
+//         State Representative Dashboard
+//       </h2>
+//       <button
+//         onClick={connectWallet}
+//         className="mb-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow-md"
+//       >
+//         {walletAddress ? `Connected: ${walletAddress}` : "Connect Wallet"}
+//       </button>
+//       <div className="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-lg">
+//         <input
+//           type="file"
+//           className="block w-full mb-4 p-2 border border-gray-600 rounded bg-gray-900"
+//           onChange={(e) => setFile(e.target.files[0])}
+//         />
+//         <button
+//           onClick={uploadToPinata}
+//           className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded mb-4"
+//         >
+//           Upload to IPFS
+//         </button>
+//         {cid && <p className="text-center text-green-400">CID: {cid}</p>}
+//         <button
+//           onClick={storeOnChain}
+//           disabled={!cid}
+//           className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mt-4"
+//         >
+//           Store on Blockchain
+//         </button>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default StateRepDashboard;
+
 import React, { useState } from "react";
 import { ethers } from "ethers";
 import axios from "axios";
+import { Upload, CheckCircle, ShieldCheck, Database } from "lucide-react";
 
 const CONTRACT_ADDRESS = "0xfF4Fbe78f09F35d20AD43bc550C42Fed335B61E0";
 const CONTRACT_ABI = [
@@ -309,6 +432,7 @@ const StateRepDashboard = () => {
   const [file, setFile] = useState(null);
   const [cid, setCid] = useState("");
   const [walletAddress, setWalletAddress] = useState("");
+  const [step, setStep] = useState(1);
 
   const connectWallet = async () => {
     try {
@@ -320,6 +444,7 @@ const StateRepDashboard = () => {
       const signer = await provider.getSigner();
       const address = await signer.getAddress();
       setWalletAddress(address);
+      setStep(2);
     } catch (error) {
       console.error("Wallet connection failed:", error);
       alert("Failed to connect wallet.");
@@ -344,6 +469,7 @@ const StateRepDashboard = () => {
       );
       setCid(res.data.IpfsHash);
       alert("File uploaded to IPFS successfully");
+      setStep(3);
     } catch (err) {
       console.error("Error uploading to Pinata", err);
       alert("Error uploading file");
@@ -364,43 +490,107 @@ const StateRepDashboard = () => {
       const tx = await contract.uploadDocumentByStateRep(cid);
       await tx.wait();
       alert("Document CID stored on blockchain");
+      setStep(4);
     } catch (err) {
       console.error("Error storing on chain:", err);
       alert("Transaction failed.");
     }
   };
 
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-black to-purple-900 text-white p-6">
-      <h2 className="text-3xl font-bold mb-6">
-        State Representative Dashboard
-      </h2>
-      <button
-        onClick={connectWallet}
-        className="mb-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow-md"
+  const renderStepIndicator = (currentStep, stepNumber, icon) => {
+    const IconComponent = icon;
+    return (
+      <div
+        className={`flex items-center ${currentStep >= stepNumber ? "text-green-500" : "text-gray-500"}`}
       >
-        {walletAddress ? `Connected: ${walletAddress}` : "Connect Wallet"}
-      </button>
-      <div className="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-lg">
-        <input
-          type="file"
-          className="block w-full mb-4 p-2 border border-gray-600 rounded bg-gray-900"
-          onChange={(e) => setFile(e.target.files[0])}
-        />
-        <button
-          onClick={uploadToPinata}
-          className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded mb-4"
+        <div
+          className={`w-10 h-10 rounded-full flex items-center justify-center 
+          ${
+            currentStep >= stepNumber
+              ? "bg-green-500 text-white"
+              : "bg-gray-700 text-gray-400"
+          }`}
         >
-          Upload to IPFS
-        </button>
-        {cid && <p className="text-center text-green-400">CID: {cid}</p>}
-        <button
-          onClick={storeOnChain}
-          disabled={!cid}
-          className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mt-4"
+          <IconComponent size={20} />
+        </div>
+        <div
+          className={`ml-2 font-semibold 
+          ${currentStep >= stepNumber ? "text-white" : "text-gray-500"}`}
         >
-          Store on Blockchain
+          Step {stepNumber}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-gray-900 to-purple-900 text-white p-6 pt-24">
+      <div className="w-full max-w-xl bg-gray-800 rounded-xl shadow-2xl p-8">
+        <h2 className="text-4xl font-bold mb-8 text-center text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-500">
+          State Representative Dashboard
+        </h2>
+
+        {/* Step Indicators */}
+        <div className="flex justify-between mb-8 space-x-4">
+          {renderStepIndicator(step, 1, Upload)}
+          {renderStepIndicator(step, 2, CheckCircle)}
+          {renderStepIndicator(step, 3, ShieldCheck)}
+          {renderStepIndicator(step, 4, Database)}
+        </div>
+
+        {/* Wallet Connection */}
+        <button
+          onClick={connectWallet}
+          className={`w-full mb-6 py-3 rounded-lg transition-all duration-300 
+            ${
+              walletAddress
+                ? "bg-green-600 hover:bg-green-700"
+                : "bg-blue-600 hover:bg-blue-700"
+            } 
+            text-white font-bold shadow-lg`}
+        >
+          {walletAddress
+            ? `Connected: ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
+            : "Connect Wallet"}
         </button>
+
+        {/* File Upload */}
+        <div className="bg-gray-900 p-6 rounded-lg shadow-inner">
+          <input
+            type="file"
+            className="block w-full mb-4 p-3 border-2 border-dashed border-gray-600 rounded-lg 
+              file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 
+              file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700
+              hover:file:bg-purple-100"
+            onChange={(e) => {
+              setFile(e.target.files[0]);
+              setStep(Math.max(step, 2));
+            }}
+          />
+          <button
+            onClick={uploadToPinata}
+            disabled={!file}
+            className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg 
+              disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+          >
+            Upload to IPFS
+          </button>
+
+          {cid && (
+            <div className="mt-4 bg-gray-700 p-3 rounded-lg text-center">
+              <p className="text-green-400 break-words">CID: {cid}</p>
+            </div>
+          )}
+
+          <button
+            onClick={storeOnChain}
+            disabled={!cid}
+            className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg mt-4 
+              disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+          >
+            Store on Blockchain
+          </button>
+        </div>
       </div>
     </div>
   );
