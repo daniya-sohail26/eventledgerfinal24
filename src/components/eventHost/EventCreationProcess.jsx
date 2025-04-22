@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Calendar,
   MapPinCheckInside,
@@ -167,12 +167,12 @@ const EventCreationProcess = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-                <Clock className="mr-2 text-purple-600 "/>
+                <Clock className="mr-2 text-purple-600 " />
                 Date & Time
               </label>
               <div className="grid grid-cols-3 gap-4">
-                        <div className="relative">
-                            <label>Date</label>
+                <div className="relative">
+                  <label>Date</label>
                   <input
                     type="date"
                     name="startDate"
@@ -182,8 +182,8 @@ const EventCreationProcess = () => {
                   />
                   {/* <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" /> */}
                 </div>
-                        <div className="relative">
-                            <label>Start Time</label>
+                <div className="relative">
+                  <label>Start Time</label>
                   <input
                     type="time"
                     name="startTime"
@@ -193,8 +193,8 @@ const EventCreationProcess = () => {
                   />
                   {/* <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" /> */}
                 </div>
-                        <div className="relative">
-                            <label>End Time</label>
+                <div className="relative">
+                  <label>End Time</label>
                   <input
                     type="time"
                     name="endTime"
@@ -347,68 +347,145 @@ const EventCreationProcess = () => {
     }
   };
 
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-black flex items-center justify-center p-6">
-        <div className="max-w-3xl w-full mx-auto p-6 mt-24 bg-white shadow-lg rounded-2xl">
-          {/* Heading */}
-          <h1 className="text-3xl font-bold mb-8 text-black text-center">
-            Create Your <span className="text-purple-600">Event</span>
-          </h1>
+  // Ticket Animation Logic
+  const [tickets, setTickets] = useState([]);
 
-          {/* Step Indicator */}
-          <div className="flex justify-between items-center mb-8">
-            {steps.map((step, index) => (
+  useEffect(() => {
+    const createTicket = () => {
+      const ticket = {
+        id: Math.random(),
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        rotation: Math.random() * 360,
+        speedX: (Math.random() - 0.5) * 2, // Random horizontal speed
+        speedY: Math.random() * 2 + 1, // Random vertical speed
+        size: Math.random() * 20 + 10, // Random size
+      };
+      setTickets((prevTickets) => [...prevTickets, ticket]);
+    };
+
+    const animationFrame = () => {
+      setTickets((prevTickets) =>
+        prevTickets.map((ticket) => {
+          const newX = ticket.x + ticket.speedX;
+          const newY = ticket.y + ticket.speedY;
+
+          // Reset ticket position when it goes out of the screen
+          if (newY > window.innerHeight) {
+            return {
+              ...ticket,
+              x: Math.random() * window.innerWidth,
+              y: -ticket.size,
+              speedX: (Math.random() - 0.5) * 2,
+              speedY: Math.random() * 2 + 1,
+              size: Math.random() * 20 + 10,
+            };
+          }
+
+          return { ...ticket, x: newX, y: newY };
+        })
+      );
+      requestAnimationFrame(animationFrame);
+    };
+
+    // Create initial tickets and set up the animation
+    for (let i = 0; i < 20; i++) {
+      // Adjust the number of initial tickets
+      createTicket();
+    }
+    const animationId = requestAnimationFrame(animationFrame);
+
+    // Clean up animation on component unmount
+    return () => {
+      cancelAnimationFrame(animationId);
+    };
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-black flex items-center justify-center p-6 overflow-hidden relative">
+      {/* Ticket Animation Layer */}
+      <div
+        className="absolute top-0 left-0 w-full h-full pointer-events-none"
+        style={{ overflow: "hidden" }}
+      >
+        {tickets.map((ticket) => (
+          <span
+            key={ticket.id}
+            style={{
+              position: "absolute",
+              left: `${ticket.x}px`,
+              top: `${ticket.y}px`,
+              transform: `rotate(${ticket.rotation}deg)`,
+              fontSize: `${ticket.size}px`,
+              color: "rgba(255, 255, 255, 0.6)",
+              zIndex: 0, // Ensure tickets are behind the content
+            }}
+          >
+            <Ticket />
+          </span>
+        ))}
+      </div>
+
+      <div className="max-w-3xl w-full mx-auto p-6 mt-24 bg-white shadow-lg rounded-2xl relative z-10">
+        {/* Heading */}
+        <h1 className="text-3xl font-bold mb-8 text-black text-center">
+          Create Your <span className="text-purple-600">Event</span>
+        </h1>
+
+        {/* Step Indicator */}
+        <div className="flex justify-between items-center mb-8">
+          {steps.map((step, index) => (
+            <div
+              key={step}
+              className={`flex-1 text-center ${
+                index <= currentStep ? "text-purple-600" : "text-gray-400"
+              }`}
+            >
               <div
-                key={step}
-                className={`flex-1 text-center ${
-                  index <= currentStep ? "text-purple-600" : "text-gray-400"
-                }`}
-              >
-                <div
-                  className={`h-1 mb-2 ${
-                    index < currentStep
+                className={`h-1 mb-2 ${
+                  index < currentStep
+                    ? "bg-purple-600"
+                    : index === currentStep
                       ? "bg-purple-600"
-                      : index === currentStep
-                        ? "bg-purple-600"
-                        : "bg-gray-300"
-                  }`}
-                ></div>
-                {step}
-              </div>
-            ))}
-          </div>
+                      : "bg-gray-300"
+                }`}
+              ></div>
+              {step}
+            </div>
+          ))}
+        </div>
 
-          {/* Content */}
-          <div className="mb-6">{renderStepContent()}</div>
+        {/* Content */}
+        <div className="mb-6">{renderStepContent()}</div>
 
-          {/* Navigation */}
-          <div className="flex justify-between">
-            {currentStep > 0 && (
-              <button
-                onClick={() => setCurrentStep((prev) => prev - 1)}
-                className="flex items-center px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
-              >
-                <ChevronLeft className="mr-2" />
-                Previous
-              </button>
-            )}
-            {currentStep < steps.length - 1 ? (
-              <button
-                onClick={() => setCurrentStep((prev) => prev + 1)}
-                className="ml-auto flex items-center px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
-              >
-                Next
-                <ChevronRight className="ml-2" />
-              </button>
-            ) : (
-              <button className="ml-auto flex items-center px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800">
-                Create Event
-              </button>
-            )}
-          </div>
+        {/* Navigation */}
+        <div className="flex justify-between">
+          {currentStep > 0 && (
+            <button
+              onClick={() => setCurrentStep((prev) => prev - 1)}
+              className="flex items-center px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+            >
+              <ChevronLeft className="mr-2" />
+              Previous
+            </button>
+          )}
+          {currentStep < steps.length - 1 ? (
+            <button
+              onClick={() => setCurrentStep((prev) => prev + 1)}
+              className="ml-auto flex items-center px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+            >
+              Next
+              <ChevronRight className="ml-2" />
+            </button>
+          ) : (
+            <button className="ml-auto flex items-center px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800">
+              Create Event
+            </button>
+          )}
         </div>
       </div>
-    );
+    </div>
+  );
 };
 
 export default EventCreationProcess;
