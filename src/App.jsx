@@ -12,6 +12,9 @@ import PrivateRoute from "./components/PrivateRoute";
 import EventHostLogin from "./components/eventHost/EventHostLogin";
 import EventHostRegistration from "./components/eventHost/EventHostRegistration";
 import EventCreationProcess from "./components/eventHost/EventCreationProcess";
+import BuyerRegister from "./components/buyer/BuyerLogin";
+import BuyerRegistration from "./components/buyer/BuyerRegistration";
+import ProductsPage from "./components/eventHost/EventHostProducts";
 
 
 function App() {
@@ -43,6 +46,9 @@ function App() {
             element={<Dashboard />}
           />
         </Route>
+        <Route path="/buyerlogin" element={<BuyerRegister />} />
+        <Route path="/buyerregistration" element={<BuyerRegistration />} />
+        <Route path="/productshost" element={<ProductsPage />} />
       </Routes>
     </main>
   );

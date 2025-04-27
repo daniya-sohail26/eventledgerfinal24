@@ -47,6 +47,10 @@ const NavBar = () => {
     navigate("/event-host-login");
   };
 
+   const handleBuyerRegister = () => {
+     navigate("/buyerlogin");
+   };
+
   return (
     <div
       ref={navContainerRef}
@@ -80,12 +84,12 @@ const NavBar = () => {
               </button>
               {isDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-800 rounded-lg shadow-lg">
-                  <a
-                    href="/buyer-login"
-                    className="block px-4 py-2 hover:bg-purple-400"
+                  <button
+                    onClick={handleBuyerRegister}
+                    className="block w-full text-left px-4 py-2 hover:bg-purple-400"
                   >
                     Login as Buyer
-                  </a>
+                  </button>
                   <button
                     onClick={handleEventHostLogin}
                     className="block w-full text-left px-4 py-2 hover:bg-purple-400"
