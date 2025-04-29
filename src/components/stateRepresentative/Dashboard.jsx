@@ -413,7 +413,7 @@ import { ethers } from "ethers";
 import axios from "axios";
 import { Upload, CheckCircle, ShieldCheck, Database } from "lucide-react";
 
-const CONTRACT_ADDRESS = "0xeAefe2c51c2Fa3573236aa77B4C22c907120519b";
+const CONTRACT_ADDRESS = "0x48F8377e3e7b073843529F1B8FC56d9019B3Ed52";
 const CONTRACT_ABI = [
   {
     inputs: [{ internalType: "string", name: "_cid", type: "string" }],
