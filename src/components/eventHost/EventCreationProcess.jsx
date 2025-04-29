@@ -11,6 +11,8 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronDown,
+  X,
+  Plus,
 } from "lucide-react";
 
 const EventCreationProcess = () => {
@@ -24,13 +26,13 @@ const EventCreationProcess = () => {
     endTime: "",
     location: "",
     eventDescription: "",
-    bannerImage: null,
+    images: [],
     tickets: [{ name: "", price: "" }],
   });
-  const [imagePreview, setImagePreview] = useState(null);
+  const [imagePreviews, setImagePreviews] = useState([]);
   const fileInputRef = useRef(null);
 
-  const steps = ["Edit", "Banner", "Ticketing"];
+  const steps = ["Event Details", "Images"];
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -41,19 +43,33 @@ const EventCreationProcess = () => {
   };
 
   const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
+    const files = Array.from(e.target.files);
+    if (files.length > 0) {
+      // Add new files to existing images array
       setEventDetails((prev) => ({
         ...prev,
-        bannerImage: file,
+        images: [...prev.images, ...files],
       }));
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
+      // Create previews for all new files
+      files.forEach((file) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImagePreviews((prev) => [...prev, reader.result]);
+        };
+        reader.readAsDataURL(file);
+      });
     }
+  };
+
+  const removeImage = (index) => {
+    // Remove from both eventDetails.images and imagePreviews
+    setEventDetails((prev) => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index),
+    }));
+
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleTicketChange = (index, e) => {
@@ -109,8 +125,17 @@ const EventCreationProcess = () => {
                   className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-500 appearance-none"
                 >
                   <option value="">Select event category</option>
-                  <option value="conference">Conference</option>
-                  <option value="workshop">Workshop</option>
+                  <option value="music">Music and Concert</option>
+                  <option value="sports">Sports</option>
+                  <option value="theater">Theater & Performing Arts</option>
+                  <option value="festivals">Festivals & Fairs</option>
+                  <option value="conferences">Conferences & Workshops</option>
+                  <option value="family">Family & Kids</option>
+                  <option value="food">Food & Drink</option>
+                  <option value="art">Art & Culture</option>
+                  <option value="nightlife">Nightlife & Parties</option>
+                  <option value="charity">Charity & Community</option>
+                  <option value="hobbies">Hobbies & Special Interests</option>
                 </select>
                 <MapPinCheckInside className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -126,7 +151,7 @@ const EventCreationProcess = () => {
                   className={`
                   inline-flex items-center px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out
                   ${
-                    eventDetails.eventType === "physical"
+                    eventDetails.eventType === "onsite"
                       ? "bg-purple-100 text-purple-700 border-2 border-purple-500"
                       : "bg-gray-100 text-gray-700 border-2 border-transparent"
                   }
@@ -135,12 +160,12 @@ const EventCreationProcess = () => {
                   <input
                     type="radio"
                     name="eventType"
-                    value="physical"
-                    checked={eventDetails.eventType === "physical"}
+                    value="onsite"
+                    checked={eventDetails.eventType === "onsite"}
                     onChange={handleInputChange}
                     className="hidden"
                   />
-                  Physical Event
+                  Onsite
                 </label>
                 <label
                   className={`
@@ -160,7 +185,27 @@ const EventCreationProcess = () => {
                     onChange={handleInputChange}
                     className="hidden"
                   />
-                  Virtual Event
+                  Virtual
+                </label>
+                <label
+                  className={`
+                  inline-flex items-center px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out
+                  ${
+                    eventDetails.eventType === "hybrid"
+                      ? "bg-purple-100 text-purple-700 border-2 border-purple-500"
+                      : "bg-gray-100 text-gray-700 border-2 border-transparent"
+                  }
+                `}
+                >
+                  <input
+                    type="radio"
+                    name="eventType"
+                    value="hybrid"
+                    checked={eventDetails.eventType === "hybrid"}
+                    onChange={handleInputChange}
+                    className="hidden"
+                  />
+                  Hybrid
                 </label>
               </div>
             </div>
@@ -180,7 +225,6 @@ const EventCreationProcess = () => {
                     onChange={handleInputChange}
                     className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-500"
                   />
-                  {/* <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" /> */}
                 </div>
                 <div className="relative">
                   <label>Start Time</label>
@@ -191,7 +235,6 @@ const EventCreationProcess = () => {
                     onChange={handleInputChange}
                     className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-500"
                   />
-                  {/* <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" /> */}
                 </div>
                 <div className="relative">
                   <label>End Time</label>
@@ -202,7 +245,6 @@ const EventCreationProcess = () => {
                     onChange={handleInputChange}
                     className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-500"
                   />
-                  {/* <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" /> */}
                 </div>
               </div>
             </div>
@@ -213,19 +255,40 @@ const EventCreationProcess = () => {
                 Location
               </label>
               <div className="relative">
-                <select
+                <input
+                  type="text"
                   name="location"
                   value={eventDetails.location}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-500 appearance-none"
-                >
-                  <option value="">Where will your event take place?</option>
-                  <option value="venue1">Venue 1</option>
-                  <option value="venue2">Venue 2</option>
-                </select>
+                  placeholder="Where will your event take place?"
+                  className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-500"
+                />
                 <MapPinCheckInside className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                <Ticket className="mr-2 text-purple-600" />
+                Price of Ticket?
+              </label>
+              {eventDetails.tickets.map((ticket, index) => (
+                <div key={index} className="flex space-x-4 mb-4">
+                  <div className="relative flex-1">
+                    <input
+                      type="number"
+                      name="price"
+                      placeholder="Price"
+                      value={ticket.price}
+                      onChange={(e) => handleTicketChange(index, e)}
+                      className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-500"
+                    />
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                      $
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
 
             <div>
@@ -249,8 +312,32 @@ const EventCreationProcess = () => {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
               <ImageIcon className="mr-2 text-purple-600" />
-              Upload Image
+              Upload Images
             </label>
+
+            {/* Image gallery/grid display */}
+            {imagePreviews.length > 0 && (
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                {imagePreviews.map((preview, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={preview}
+                      alt={`Event Image ${index + 1}`}
+                      className="w-full h-32 object-cover rounded-lg border-2 border-gray-200"
+                    />
+                    <button
+                      onClick={() => removeImage(index)}
+                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      aria-label="Remove image"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Upload button/area */}
             <div
               className="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer hover:bg-purple-50 transition-colors"
               onClick={() => fileInputRef.current.click()}
@@ -261,87 +348,19 @@ const EventCreationProcess = () => {
                 accept="image/*"
                 onChange={handleImageUpload}
                 className="hidden"
+                multiple
               />
-              {imagePreview ? (
-                <img
-                  src={imagePreview}
-                  alt="Event Banner Preview"
-                  className="mx-auto max-h-64 rounded-lg object-cover"
-                />
-              ) : (
-                <div className="flex flex-col items-center space-y-4">
-                  <ImageIcon className="w-12 h-12 text-purple-600 mx-auto" />
-                  <p className="text-gray-600">
-                    Click to upload your event banner
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    Recommended: JPG, PNG, GIF (min 110x134 pixels)
-                  </p>
-                </div>
-              )}
+              <div className="flex flex-col items-center space-y-4">
+                <Plus className="w-12 h-12 text-purple-600 mx-auto" />
+                <p className="text-gray-600">Click to upload event images</p>
+                <p className="text-xs text-gray-500">
+                  You can select multiple images (JPG, PNG, GIF)
+                </p>
+              </div>
             </div>
           </div>
         );
-      case 2:
-        return (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-              <Ticket className="mr-2 text-purple-600" />
-              What tickets are you selling?
-            </label>
-            {eventDetails.tickets.map((ticket, index) => (
-              <div key={index} className="flex space-x-4 mb-4">
-                <div className="relative flex-1">
-                  <input
-                    type="text"
-                    name="name"
-                    placeholder="Ticket Name"
-                    value={ticket.name}
-                    onChange={(e) => handleTicketChange(index, e)}
-                    className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-500"
-                  />
-                  <Ticket className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                </div>
-                <div className="relative flex-1">
-                  <input
-                    type="number"
-                    name="price"
-                    placeholder="Price"
-                    value={ticket.price}
-                    onChange={(e) => handleTicketChange(index, e)}
-                    className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-500"
-                  />
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                    $
-                  </span>
-                </div>
-                {index > 0 && (
-                  <button
-                    onClick={() => {
-                      const newTickets = eventDetails.tickets.filter(
-                        (_, i) => i !== index
-                      );
-                      setEventDetails((prev) => ({
-                        ...prev,
-                        tickets: newTickets,
-                      }));
-                    }}
-                    className="text-red-500 hover:text-red-700 self-center"
-                  >
-                    Remove
-                  </button>
-                )}
-              </div>
-            ))}
-            <button
-              onClick={addTicket}
-              className="text-purple-600 hover:text-purple-800 flex items-center transition-colors"
-            >
-              <PlusCircle className="mr-2" />
-              Add Another Ticket Type
-            </button>
-          </div>
-        );
+
       default:
         return null;
     }
