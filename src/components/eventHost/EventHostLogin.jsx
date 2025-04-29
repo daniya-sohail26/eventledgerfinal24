@@ -67,7 +67,7 @@ const EventHostLogin = () => {
       localStorage.setItem("hostInfo", JSON.stringify(data.host));
 
       // 2. Redirect to the host dashboard or protected area
-      navigate("/host/dashboard"); // Or wherever the host should go after login
+      navigate("/create-event"); // Or wherever the host should go after login
     } catch (err) {
       // Catch errors from fetch, JSON parsing, or explicitly thrown errors
       setLoading(false); // Ensure loading is stopped on any error
