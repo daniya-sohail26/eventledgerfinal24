@@ -1,38 +1,111 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+/**
+ * @title DocumentVerification
+ * @dev This contract allows a designated State Representative to upload approved document CIDs (Content Identifiers).
+ * Event Hosts can then register by providing one of these pre-approved CIDs to verify their legitimacy.
+ */
 contract DocumentVerification {
-    address public constant STATE_REP = 0x22337e5460376f59113a30052869D9C073897BFA; // Authorized State Representative
-    string private documentCID; // Stores the document CID
+    // Address of the authorized State Representative
+    // Make sure this address is correct and ideally set during deployment or upgradeable for flexibility.
+    address public constant STATE_REP = address(0x22337e5460376f59113a30052869D9C073897BFA);
 
-    event DocumentUploaded(address indexed stateRep, string cid); // Event for tracking uploads
+    // --- State Variables ---
+    string[] public approvedCIDs; // Array storing all CIDs uploaded by the State Rep
+    mapping(string => bool) public isCIDApproved; // Mapping for quick check if a CID exists in the array
+    mapping(address => bool) public isVerifiedHost; // Mapping to track verified Event Hosts
 
-    // Modifier to ensure only the approved State Representative can call the function
+    // --- Events ---
+    // Event emitted when the State Rep uploads a new CID
+    event DocumentUploadedByStateRep(address indexed stateRep, string cid);
+    // Event emitted when an Event Host successfully registers using an approved CID
+    event HostVerified(address indexed eventHost, string cidUsed);
+
+    // --- Modifiers ---
+    // Modifier to ensure only the approved State Representative can call a function
     modifier onlyStateRep() {
-        require(msg.sender == STATE_REP, "Only the approved state representative can upload documents");
+        require(msg.sender == STATE_REP, "DV: Only the state representative can perform this action");
         _;
     }
 
-    // Function to upload document CID (only for the approved State Representative)
+    // --- State Representative Functions ---
+
+    /**
+     * @notice Allows the designated State Representative to upload a document CID.
+     * @dev Adds the CID to the list of approved CIDs. Ensures CID is not empty and prevents duplicates.
+     * @param _cid The Content Identifier (e.g., IPFS hash) of the document being uploaded.
+     */
     function uploadDocumentByStateRep(string memory _cid) public onlyStateRep {
-        require(bytes(_cid).length > 0, "CID cannot be empty");
+        require(bytes(_cid).length > 0, "DV: CID cannot be empty");
+        // Optional: Check if CID already exists to prevent duplicates (costs gas)
+        require(!isCIDApproved[_cid], "DV: This CID has already been approved");
 
-        // Store the CID
-        documentCID = _cid;
+        // Add the CID to the array
+        approvedCIDs.push(_cid);
+        // Mark the CID as approved in the mapping for efficient lookup
+        isCIDApproved[_cid] = true;
 
-        // Emit an event to log the transaction
-        emit DocumentUploaded(msg.sender, _cid);
+        // Emit an event to log the upload, including who uploaded it
+        emit DocumentUploadedByStateRep(msg.sender, _cid);
     }
 
-    // Function to retrieve the document CID
-    function getDocumentCID() public view returns (string memory) {
-        require(bytes(documentCID).length > 0, "No document found");
-        return documentCID;
+    // --- Event Host Functions ---
+
+    /**
+     * @notice Allows an Event Host to register by providing a CID.
+     * @dev Verifies if the provided CID exists in the list approved by the State Rep.
+     * If verified, marks the calling address (Event Host) as verified.
+     * @param _cid The CID the Event Host is using for verification.
+     */
+    function registerEventHost(string memory _cid) public {
+        require(bytes(_cid).length > 0, "DV: CID cannot be empty");
+
+        // Use the mapping for efficient check if the CID was approved
+        require(isCIDApproved[_cid], "DV: CID mismatch or not approved by state rep");
+
+        // Mark the event host (msg.sender) as verified
+        isVerifiedHost[msg.sender] = true;
+        // Emit an event logging the host verification and the CID they used
+        emit HostVerified(msg.sender, _cid);
+    }
+
+    // --- View Functions ---
+
+    /**
+     * @notice Returns the total number of CIDs uploaded/approved by the State Rep.
+     * @return uint256 The count of approved CIDs.
+     */
+    function getApprovedCIDCount() public view returns (uint256) {
+        return approvedCIDs.length;
+    }
+
+    /**
+     * @notice Returns the approved CID at a specific index in the array.
+     * @param index The index of the CID to retrieve.
+     * @return string memory The CID string at the given index.
+     */
+    function getApprovedCID(uint256 index) public view returns (string memory) {
+        require(index < approvedCIDs.length, "DV: Invalid index");
+        return approvedCIDs[index];
+    }
+
+     /**
+     * @notice Checks if a specific address is registered as a verified Event Host.
+     * @param _hostAddress The address of the potential Event Host to check.
+     * @return bool True if the address is verified, false otherwise.
+     */
+    function checkIsHostVerified(address _hostAddress) public view returns (bool) {
+        return isVerifiedHost[_hostAddress];
+    }
+
+     /**
+     * @notice Checks if a specific CID has been approved by the State Rep.
+     * @param _cid The CID string to check.
+     * @return bool True if the CID is in the approved list, false otherwise.
+     */
+    function checkIsCIDApproved(string memory _cid) public view returns (bool) {
+        require(bytes(_cid).length > 0, "DV: CID cannot be empty");
+        return isCIDApproved[_cid];
     }
 }
-
-
-
-
-
-deployed_address:0xfF4Fbe78f09F35d20AD43bc550C42Fed335B61E0
