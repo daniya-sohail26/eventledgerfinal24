@@ -1,13 +1,11 @@
-// hostController.js
-
 const Host = require("../models/Host");
 const jwt = require("jsonwebtoken");
-require("dotenv").config(); // Ensure JWT_SECRET is loaded
+require("dotenv").config();
 
-// --- Helper Function to Generate JWT ---
+// --- Helper Function to Generate JWT --- (remains the same)
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || "1h", // Use expiry from .env or default
+    expiresIn: process.env.JWT_EXPIRES_IN || "1h",
   });
 };
 
@@ -15,31 +13,86 @@ const generateToken = (id) => {
 // @route   POST /api/hosts/register
 // @access  Public
 const registerHost = async (req, res, next) => {
-  const { organizationName, orgEmail, mobileNumber, password, orgLocation } =
-    req.body;
+  // Destructure walletAddress from req.body
+  const {
+    organizationName,
+    orgEmail,
+    mobileNumber,
+    password,
+    confirmPassword, // Receive confirm password
+    orgLocation,
+    walletAddress, // Get wallet address
+  } = req.body;
+
+  // --- Basic Backend Validations ---
+  if (
+    !organizationName ||
+    !orgEmail ||
+    !mobileNumber ||
+    !password ||
+    !confirmPassword ||
+    !orgLocation ||
+    !walletAddress
+  ) {
+    return res.status(400).json({
+      message: "Please provide all required fields, including wallet address.",
+    });
+  }
+
+  if (password !== confirmPassword) {
+    return res.status(400).json({ message: "Passwords do not match." });
+  }
+
+  if (password.length < 6) {
+    return res
+      .status(400)
+      .json({ message: "Password must be at least 6 characters long." });
+  }
+
+  // Validate email format
+  if (!/^\w+([\.-]?\w+)@\w+([\.-]?\w+)(\.\w{2,3})+$/.test(orgEmail)) {
+    return res.status(400).json({ message: "Invalid email format." });
+  }
+
+  // Validate wallet address format (redundant with schema match, but good practice)
+  if (!/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
+    return res.status(400).json({ message: "Invalid wallet address format." });
+  }
+  // --- End Validations ---
 
   try {
-    const hostExists = await Host.findOne({ orgEmail });
+    // Check if email OR wallet address already exists
+    const hostExists = await Host.findOne({
+      $or: [
+        { orgEmail: orgEmail.toLowerCase() },
+        { walletAddress: walletAddress }, // Case-sensitive check is fine for addresses
+      ],
+    });
 
     if (hostExists) {
-      return res
-        .status(400)
-        .json({ message: "An organization with this email already exists" });
+      let message = "Registration failed.";
+      if (hostExists.orgEmail === orgEmail.toLowerCase()) {
+        message = "An organization with this email already exists.";
+      } else if (hostExists.walletAddress === walletAddress) {
+        message = "This wallet address is already registered.";
+      }
+      return res.status(400).json({ message });
     }
 
+    // Create new host instance including walletAddress
     const newHost = new Host({
       organizationName,
-      orgEmail,
+      orgEmail: orgEmail.toLowerCase(), // Store email in lowercase
       mobileNumber,
-      password,
+      password, // Password will be hashed by the pre-save hook
       orgLocation,
-      // isApproved is no longer explicitly set here, will use model default (or be absent if removed from model)
+      walletAddress, // Save the wallet address
     });
 
     const savedHost = await newHost.save();
 
+    // Respond without sending the password back
     res.status(201).json({
-      // Updated message slightly
       message: "Host registration successful. You can now log in.",
       host: {
         _id: savedHost._id,
@@ -47,44 +100,45 @@ const registerHost = async (req, res, next) => {
         orgEmail: savedHost.orgEmail,
         mobileNumber: savedHost.mobileNumber,
         orgLocation: savedHost.orgLocation,
-        // Removed isApproved from response
+        walletAddress: savedHost.walletAddress, // Include wallet address in response
         createdAt: savedHost.createdAt,
       },
     });
   } catch (error) {
     console.error("Registration Error:", error);
+    // Handle Mongoose validation errors specifically
     if (error.name === "ValidationError") {
       const messages = Object.values(error.errors).map((val) => val.message);
-      return res.status(400).json({ message: messages.join(", ") });
+      // Check for unique constraint errors (code 11000) which might not be caught by ValidationError directly after findOne check if race condition happens
+      if (error.code === 11000) {
+        if (error.message.includes("orgEmail")) {
+          return res.status(400).json({
+            message: "An organization with this email already exists.",
+          });
+        } else if (error.message.includes("walletAddress")) {
+          return res
+            .status(400)
+            .json({ message: "This wallet address is already registered." });
+        }
+      }
+      return res.status(400).json({ message: messages.join(" ") });
     }
+    // Pass other errors to the central error handler
     next(error);
   }
 };
 
-// --- Login Host Function ---
-// @desc    Authenticate Event Host & Get Token
-// @route   POST /api/hosts/login
-// @access  Public
+// --- Login Host Function --- (remains the same)
 const loginHost = async (req, res, next) => {
+  // ... login logic ...
   const { email, password } = req.body;
 
   try {
     const host = await Host.findOne({ orgEmail: email.toLowerCase() });
 
-    // Check if host exists AND if password matches
     if (host && (await host.comparePassword(password))) {
-      // !!!!! REMOVED THE isApproved CHECK !!!!!
-      // if (!host.isApproved) { // <-- This block is deleted
-      //   return res.status(403).json({
-      //     message:
-      //       "Account not approved. Please wait for administrator approval.",
-      //   });
-      // } // <-- End of deleted block
-
-      // Generate JWT
       const token = generateToken(host._id);
 
-      // Send response with token and user info
       res.status(200).json({
         message: "Login successful",
         token: token,
@@ -92,15 +146,15 @@ const loginHost = async (req, res, next) => {
           _id: host._id,
           organizationName: host.organizationName,
           orgEmail: host.orgEmail,
+          walletAddress: host.walletAddress, // Include wallet address on login too
         },
       });
     } else {
-      // Generic error message for security
       return res.status(401).json({ message: "Invalid email or password" });
     }
   } catch (error) {
     console.error("Login Error:", error);
-    next(error); // Pass error to the central error handler
+    next(error);
   }
 };
 

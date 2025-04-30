@@ -1,5 +1,3 @@
-// Host.js -- model
-
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 require("dotenv").config(); // For BCRYPT_SALT_ROUNDS
@@ -37,11 +35,17 @@ const hostSchema = new mongoose.Schema(
       required: [true, "Organization location is required"],
       trim: true,
     },
-    // REMOVED isApproved field
-    // isApproved: {
-    //   type: Boolean,
-    //   default: false,
-    // },
+    // --- Add Wallet Address Field ---
+    walletAddress: {
+      type: String,
+      required: [true, "Wallet address is required"], // Make it required
+      unique: true, // Ensure wallet addresses are unique among hosts
+      trim: true,
+      // Basic validation for Ethereum address format (optional but recommended)
+      match: [/^0x[a-fA-F0-9]{40}$/, "Please provide a valid wallet address"],
+      sparse: true, // Important for unique fields that might sometimes be empty during updates (though required here)
+    },
+    // --- End Wallet Address Field ---
     createdAt: {
       type: Date,
       default: Date.now,
@@ -52,7 +56,7 @@ const hostSchema = new mongoose.Schema(
   }
 );
 
-// --- Password Hashing Middleware ---
+// --- Password Hashing Middleware --- (remains the same)
 hostSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
     return next();
@@ -67,7 +71,7 @@ hostSchema.pre("save", async function (next) {
   }
 });
 
-// --- Method to compare passwords ---
+// --- Method to compare passwords --- (remains the same)
 hostSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
