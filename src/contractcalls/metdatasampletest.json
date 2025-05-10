@@ -1,0 +1,27 @@
+[
+      {
+        "trait_type": "Ticket Type",
+        "value": "General Admission"
+      },
+      {
+        "trait_type": "Event ID",
+        "value": "eventId"
+      },
+      {
+        "trait_type": "Ticket Price",
+        "value": "${ticketPriceETH} ETH"
+      },
+      {
+        "trait_type": "Owner Address",
+        "value": "buyerAddress"
+      },
+      {
+        "trait_type": "Purchased At",
+        "value": "new Date().toISOString()"
+      },
+      {
+        "trait_type": "QR Code",
+        "value": "ipfs://qr-code-hash"  
+      }
+    ]
+  

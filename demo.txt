@@ -70,6 +70,7 @@ contract DocumentVerification {
         emit HostVerified(msg.sender, _cid);
     }
 
+
     // --- View Functions ---
 
     /**

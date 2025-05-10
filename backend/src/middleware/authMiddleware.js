@@ -24,9 +24,7 @@ const protectRoute = async (req, res, next) => {
           .status(401)
           .json({ message: "Not authorized, invalid token payload" });
       }
-      console.log(
-        `ProtectRoute: Token valid, finding host with ID: ${decoded.id}`
-      );
+      console.log(`ProtectRoute: Token valid, finding host with ID: ${decoded.id}`);
 
       let foundHost = null;
       try {
@@ -45,8 +43,7 @@ const protectRoute = async (req, res, next) => {
 
       if (!foundHost) {
         console.warn(
-          `ProtectRoute Warning: Host not found in DB for token ID: ${decoded.id}. Sending 401.`
-        );
+          `ProtectRoute Warning: Host not found in DB for token ID: ${decoded.id}. Sending 401.`);
         return res
           .status(401)
           .json({ message: "Not authorized, host not found" });
@@ -55,8 +52,7 @@ const protectRoute = async (req, res, next) => {
       // --- Assign to req.authenticatedHost INSTEAD of req.host ---
       req.authenticatedHost = foundHost;
       console.log(
-        `ProtectRoute: Host object assigned to req.authenticatedHost. ID: ${req.authenticatedHost._id}. Calling next().`
-      );
+        `ProtectRoute: Host object assigned to req.authenticatedHost. ID: ${req.authenticatedHost._id}. Calling next().`);
       next(); // Proceed
     } catch (error) {
       // JWT verification errors

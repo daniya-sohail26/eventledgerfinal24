@@ -23,5 +23,8 @@ router.post(
 
   createEvent
 );
+const { getEventsByHost } = require("../controllers/eventController");
+
+router.get('/:hostId', getEventsByHost);
 
 module.exports = router;

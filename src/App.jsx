@@ -12,10 +12,12 @@ import PrivateRoute from "./components/PrivateRoute";
 import EventHostLogin from "./components/eventHost/EventHostLogin";
 import EventHostRegistration from "./components/eventHost/EventHostRegistration";
 import EventCreationProcess from "./components/eventHost/EventCreationProcess";
-import BuyerRegister from "./components/buyer/BuyerLogin";
+import BuyerLogin from "./components/buyer/BuyerLogin";
 import BuyerRegistration from "./components/buyer/BuyerRegistration";
 import ProductsPage from "./components/eventHost/EventHostProducts";
-
+import BuyerEventListings from "./components/buyer/BuyerEventListings";
+import EventDetailsPageTailwind from './components/buyer/EventDetailsPageTailwind.jsx';
+import BuyerPersonalEvents from './components/buyer/BuyerPersonalEvents.jsx';
 
 function App() {
   return (
@@ -46,9 +48,14 @@ function App() {
             element={<Dashboard />}
           />
         </Route>
-        <Route path="/buyerlogin" element={<BuyerRegister />} />
+        <Route path="/buyerlogin" element={<BuyerLogin />} />
         <Route path="/buyerregistration" element={<BuyerRegistration />} />
         <Route path="/productshost" element={<ProductsPage />} />
+        <Route path="/buyerEventListings" element={<BuyerEventListings />} />
+        <Route path="/buyerEventListings/:eventId" element={<EventDetailsPageTailwind />} />
+        <Route path="/BuyerPersonalEvents" element={<BuyerPersonalEvents />} />
+
+
       </Routes>
     </main>
   );

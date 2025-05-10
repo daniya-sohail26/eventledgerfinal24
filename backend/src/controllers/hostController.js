@@ -34,9 +34,12 @@ const registerHost = async (req, res, next) => {
     !orgLocation ||
     !walletAddress
   ) {
-    return res.status(400).json({
-      message: "Please provide all required fields, including wallet address.",
-    });
+    return res
+      .status(400)
+      .json({
+        message:
+          "Please provide all required fields, including wallet address.",
+      });
   }
 
   if (password !== confirmPassword) {
@@ -112,9 +115,11 @@ const registerHost = async (req, res, next) => {
       // Check for unique constraint errors (code 11000) which might not be caught by ValidationError directly after findOne check if race condition happens
       if (error.code === 11000) {
         if (error.message.includes("orgEmail")) {
-          return res.status(400).json({
-            message: "An organization with this email already exists.",
-          });
+          return res
+            .status(400)
+            .json({
+              message: "An organization with this email already exists.",
+            });
         } else if (error.message.includes("walletAddress")) {
           return res
             .status(400)

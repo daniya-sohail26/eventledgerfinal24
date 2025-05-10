@@ -280,5 +280,23 @@ const createEvent = async (req, res, next) => {
     });
   }
 };
+// Debug to ensure Event is a Mongoose model
+console.log('Event model:', Event);
 
-module.exports = { createEvent };
+const getEventsByHost = async (req, res, next) => {
+  try {
+    const hostId = req.params.hostId;
+    console.log('Host ID:', hostId); // Debug hostId
+    const events = await Event.find({ hostId }).sort({ date: -1 });
+    if (!events || events.length === 0) {
+      return res.status(404).json({ message: 'No events found for this host' });
+    }
+    res.status(200).json(events);
+  } catch (error) {
+    console.error('Error fetching events:', error);
+    next(error);
+  }
+};
+
+
+module.exports = { createEvent,getEventsByHost };

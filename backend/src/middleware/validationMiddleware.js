@@ -1,27 +1,20 @@
-// --- IMPORT 'body' HERE ---
-const { check, body, validationResult } = require("express-validator");
+const { check, body, query, validationResult } = require("express-validator");
 
-// Middleware to handle validation results
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    // Return only the first error message for simplicity, or customize as needed
-    // Consider joining messages for better feedback:
     const messages = errors.array().map((err) => err.msg);
     return res.status(400).json({ message: messages.join(". ") });
-    // Original: return res.status(400).json({ message: errors.array()[0].msg });
   }
   next();
 };
 
-// Validation rules for host registration (using check - this is fine)
 const hostRegistrationValidationRules = () => {
   return [
     check("organizationName")
       .trim()
       .notEmpty()
       .withMessage("Organization name is required"),
-
     check("orgEmail")
       .trim()
       .notEmpty()
@@ -29,21 +22,17 @@ const hostRegistrationValidationRules = () => {
       .isEmail()
       .withMessage("Must be a valid email address")
       .normalizeEmail(),
-
     check("mobileNumber")
       .trim()
       .notEmpty()
       .withMessage("Mobile number is required")
-      // Optional: Keep or remove isMobilePhone based on how strict you need it
       .isMobilePhone("any", { strictMode: false })
-      .withMessage("Must be a valid mobile number format"), // 'any' checks common formats
-
+      .withMessage("Must be a valid mobile number format"),
     check("password")
       .notEmpty()
       .withMessage("Password is required")
       .isLength({ min: 6 })
       .withMessage("Password must be at least 6 characters long"),
-
     check("confirmPassword")
       .notEmpty()
       .withMessage("Confirm password is required")
@@ -51,28 +40,54 @@ const hostRegistrationValidationRules = () => {
         if (value !== req.body.password) {
           throw new Error("Passwords do not match");
         }
-        return true; // Indicates the success of this synchronous custom validator
+        return true;
       }),
-
     check("orgLocation")
       .trim()
       .notEmpty()
       .withMessage("Organization location is required"),
-
-    // No validation for businessDoc here as requested
   ];
 };
 
-// --- Validation rules for host login (using body) ---
 const hostLoginValidationRules = () => {
   return [
-    // Now `body` is defined because we imported it
     body("email")
       .isEmail()
       .withMessage("Please provide a valid email address")
-      .normalizeEmail(), // Good practice to normalize email for comparison
+      .normalizeEmail(),
+    body("password").notEmpty().withMessage("Password is required"),
+  ];
+};
 
-    body("password").notEmpty().withMessage("Password is required"), // No need for length check here, just existence
+const buyereventQueryValidationRules = () => {
+  return [
+    query("category")
+      .optional()
+      .isIn([
+        "All",
+        "Music & Concerts",
+        "Sports",
+        "Theater & Performing Arts",
+        "Festivals & Fairs",
+        "Conferences & Workshops",
+        "Family & Kids",
+        "Food & Drink",
+        "Art & Culture",
+        "Nightlife & Parties",
+        "Charity & Community",
+        "Hobbies & Special Interests",
+        "Technology",
+      ])
+      .withMessage("Invalid category"),
+    query("eventType")
+      .optional()
+      .isIn(["All", "onsite", "virtual", "hybrid"]) // Changed to lowercase to match frontend and database
+      .withMessage("Invalid event type"),
+    query("search")
+      .optional()
+      .trim()
+      .isLength({ max: 100 })
+      .withMessage("Search query must be less than 100 characters"),
   ];
 };
 
@@ -80,4 +95,5 @@ module.exports = {
   handleValidationErrors,
   hostRegistrationValidationRules,
   hostLoginValidationRules,
+  buyereventQueryValidationRules,
 };

@@ -1,182 +1,141 @@
-import React, { useState } from "react";
-import { Calendar, MapPin, Ticket } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { Calendar, MapPin, RefreshCcw, Clock, Tag } from 'lucide-react';
+import axios from 'axios';
 
-const dummyEvents = [
-  {
-    id: 1,
-    name: "Techno Festival 2025",
-    location: "Berlin, Germany",
-    date: "June 15, 2025",
-    price: "$49",
-    category: "Music",
-    image: "/img/contact-1.webp",
-  },
-  {
-    id: 2,
-    name: "Blockchain Summit",
-    location: "New York, USA",
-    date: "July 22, 2025",
-    price: "$129",
-    category: "Tech",
-    image: "/img/swordman.webp",
-  },
-  {
-    id: 3,
-    name: "Anime & Cosplay Expo",
-    location: "Tokyo, Japan",
-    date: "Aug 10, 2025",
-    price: "$39",
-    category: "Culture",
-    image: "/img/resell.png",
-  },
-  {
-    id: 4,
-    name: "Jazz Nights",
-    location: "New Orleans, USA",
-    date: "May 5, 2025",
-    price: "$59",
-    category: "Music",
-    image: "/img/entrance.jpg",
-  },
-  {
-    id: 5,
-    name: "AI World Forum",
-    location: "San Francisco, USA",
-    date: "Sept 18, 2025",
-    price: "$199",
-    category: "Tech",
-    image: "/img/stones.webp",
-  },
-  {
-    id: 1,
-    name: "Techno Festival 2025",
-    location: "Berlin, Germany",
-    date: "June 15, 2025",
-    price: "$49",
-    category: "Music",
-    image: "/img/contact-1.webp",
-  },
-  {
-    id: 2,
-    name: "Blockchain Summit",
-    location: "New York, USA",
-    date: "July 22, 2025",
-    price: "$129",
-    category: "Tech",
-    image: "/img/swordman.webp",
-  },
-  {
-    id: 3,
-    name: "Anime & Cosplay Expo",
-    location: "Tokyo, Japan",
-    date: "Aug 10, 2025",
-    price: "$39",
-    category: "Culture",
-    image: "/img/resell.png",
-  },
-  {
-    id: 4,
-    name: "Jazz Nights",
-    location: "New Orleans, USA",
-    date: "May 5, 2025",
-    price: "$59",
-    category: "Music",
-    image: "/img/entrance.jpg",
-  },
-  {
-    id: 5,
-    name: "AI World Forum",
-    location: "San Francisco, USA",
-    date: "Sept 18, 2025",
-    price: "$199",
-    category: "Tech",
-    image: "/img/stones.webp",
-  },
-];
+const tabs = ['Created Events', 'Upcoming Events', 'Reselling Requests'];
 
-const categories = ["All", "Music", "Tech", "Culture"];
+const EventHostDashboard = () => {
+  const [activeTab, setActiveTab] = useState('Created Events');
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-const ProductsPage = () => {
-  const [selectedCategory, setSelectedCategory] = useState("All");
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const hostId = localStorage.getItem('hostId');
+        if (!hostId) {
+          throw new Error('Please log in to view your events');
+        }
+        const response = await axios.get(`http://localhost:5000/api/events/${hostId}`);
+        setEvents(response.data);
+        setLoading(false);
+      } catch (err) {
+        setError(err.response?.data?.message || err.message || 'Failed to fetch events');
+        setLoading(false);
+      }
+    };
+    fetchEvents();
+  }, []);
 
-  const filteredEvents =
-    selectedCategory === "All"
-      ? dummyEvents
-      : dummyEvents.filter((event) => event.category === selectedCategory);
+  const now = new Date();
+  const createdEvents = events;
+  const upcomingEvents = events.filter((event) => new Date(event.startDate) > now); // Updated to use startDate
+  const displayedEvents =
+    activeTab === 'Created Events'
+      ? createdEvents
+      : activeTab === 'Upcoming Events'
+      ? upcomingEvents
+      : [];
+
+  const myResellRequests = [
+    { id: 4, eventName: 'Techno Festival 2025', buyerName: 'John Doe', requestedPrice: '$39', image: '/img/contact-1.webp' },
+    { id: 5, eventName: 'Blockchain Summit', buyerName: 'Jane Smith', requestedPrice: '$100', image: '/img/swordman.webp' },
+  ];
+
+  if (loading) return <div className="text-center text-purple-400 mt-20 text-xl">Loading...</div>;
+  if (error) return <div className="text-center text-red-400 mt-20 text-xl">Error: {error}</div>;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-purple-950 to-black py-28 px-6">
       <h1 className="text-5xl font-extrabold text-center bg-clip-text text-transparent bg-gradient-to-r from-purple-300 via-pink-500 to-indigo-400 mb-20 animate-fade-in">
-        Explore Upcoming Events
+        My Events Dashboard
       </h1>
-
-      <div className="flex justify-center gap-4 mb-14 flex-wrap">
-        {categories.map((cat) => (
+      <div className="flex justify-center gap-6 mb-16">
+        {tabs.map((tab) => (
           <button
-            key={cat}
-            onClick={() => setSelectedCategory(cat)}
-            className={`px-6 py-2 rounded-full font-semibold text-sm transition-all duration-300 border tracking-wide shadow-md ${
-              selectedCategory === cat
-                ? "bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-lg"
-                : "bg-black/40 text-purple-300 border-purple-800 hover:border-purple-500 hover:text-white"
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-8 py-3 rounded-full font-semibold text-base tracking-wide transition-all duration-300 ${
+              activeTab === tab
+                ? 'bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-lg'
+                : 'bg-black/40 text-purple-300 border border-purple-800 hover:border-purple-500 hover:text-white'
             }`}
           >
-            {cat}
+            {tab}
           </button>
         ))}
       </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-10 max-w-7xl mx-auto">
+        {activeTab !== 'Reselling Requests' ? (
+          displayedEvents.map((event) => (
+            <div
+              key={event._id}
+              className="group bg-black/50 border border-purple-800/40 rounded-3xl overflow-hidden shadow-2xl hover:shadow-purple-600/50 transition-transform transform hover:scale-105 hover:rotate-1 backdrop-blur-md"
+            >
+              <div className="relative">
+              <img
+  src={event.posterImages?.[0] || '/img/fallback-image.jpg'} // use a fallback image path here
+  alt={event.eventTitle || 'Event Image'}
+  className="w-full h-48 object-cover group-hover:brightness-110"
+/>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-10 max-w-7xl mx-auto">
-        {filteredEvents.map((event, i) => (
-          <div
-            key={event.id}
-            className={`relative group border border-purple-800/40 backdrop-blur-2xl rounded-3xl shadow-2xl overflow-hidden transform transition duration-500 hover:scale-[1.03] hover:shadow-purple-800/50 ${
-              i % 2 === 0 ? "rotate-[-1deg]" : "rotate-[1deg]"
-            }`}
-          >
-            {/* Glow */}
-            <div className="absolute -inset-1 bg-gradient-to-br from-purple-600 to-pink-600 opacity-30 blur-xl rounded-3xl group-hover:opacity-60"></div>
-
-            <img
-              src={event.image}
-              alt={event.name}
-              className="w-full h-52 object-cover rounded-t-3xl border-b border-purple-700/40"
-            />
-
-            <div className="relative p-5 z-10 text-purple-200">
-              <h2 className="text-xl font-bold mb-2 text-pink-300 tracking-wide">
-                {event.name}
-              </h2>
-              <div className="flex items-center text-sm space-x-2 mb-1 text-purple-400">
-                <MapPin size={16} />
-                <span>{event.location}</span>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
               </div>
-              <div className="flex items-center text-sm space-x-2 text-purple-400">
-                <Calendar size={16} />
-                <span>{event.date}</span>
-              </div>
-
-              <div className="flex justify-between items-center mt-4">
-                <span className="text-lg font-bold text-pink-400">
-                  {event.price}
-                </span>
-                <button className="bg-gradient-to-br from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 transition-all text-white font-semibold py-2 px-4 rounded-xl flex items-center gap-2 shadow-md hover:scale-105">
-                  <Ticket size={18} />
-                  <span>Buy</span>
-                </button>
+              <div className="p-6 text-purple-200">
+                <h2 className="text-xl font-bold text-pink-300 mb-2">{event.eventTitle}</h2>
+                {event.eventType !== 'virtual' && ( // Conditionally render location for non-virtual events
+                  <div className="flex items-center text-sm mb-1">
+                    <MapPin size={16} className="mr-2 text-purple-400" />
+                    {event.location || 'Location TBD'}
+                  </div>
+                )}
+                <div className="flex items-center text-sm mb-1">
+                  <Calendar size={16} className="mr-2 text-purple-400" />
+                  {new Date(event.startDate).toLocaleDateString()} at {event.startTime}
+                </div>
+                <div className="flex items-center text-sm mb-4">
+                  <Tag size={16} className="mr-2 text-purple-400" />
+                  {event.category} | {event.ticketsSold} Tickets Sold
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-lg font-semibold text-pink-400">{event.ticketPriceETH} ETH</span>
+                  <button className="bg-gradient-to-br from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 text-white text-sm px-5 py-2 rounded-full flex items-center gap-2 shadow-md">
+                    <Clock size={16} /> Details
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))
+        ) : (
+          myResellRequests.map((request) => (
+            <div
+              key={request.id}
+              className="group bg-black/50 border border-pink-800/40 rounded-3xl overflow-hidden shadow-2xl hover:shadow-pink-600/50 transition-transform transform hover:scale-105 hover:-rotate-1 backdrop-blur-md"
+            >
+              <div className="relative">
+                <img src={request.image} alt={request.eventName} className="w-full h-48 object-cover group-hover:brightness-110" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+              </div>
+              <div className="p-6 text-pink-200">
+                <h2 className="text-xl font-bold text-purple-300 mb-2">{request.eventName}</h2>
+                <p className="text-sm mb-2">Requested by: {request.buyerName}</p>
+                <div className="flex justify-between items-center">
+                  <span className="text-lg font-semibold text-pink-400">{request.requestedPrice}</span>
+                  <button className="bg-gradient-to-br from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white text-sm px-5 py-2 rounded-full flex items-center gap-2 shadow-md">
+                    <RefreshCcw size={16} /> Approve
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
       </div>
-
-      {filteredEvents.length === 0 && (
-        <p className="text-center text-purple-400 mt-20 text-xl">
-          No events found in this category.
-        </p>
+      {displayedEvents.length === 0 && activeTab !== 'Reselling Requests' && (
+        <p className="text-center text-purple-400 mt-20 text-xl">No {activeTab.toLowerCase()} available.</p>
       )}
     </div>
   );
 };
 
-export default ProductsPage;
+export default EventHostDashboard;
