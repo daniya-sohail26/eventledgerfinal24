@@ -1,26 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { Mail, Lock, Eye, EyeOff, LogIn, Ticket } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { Mail, Lock, Eye, EyeOff, LogIn, Ticket } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL = "http://localhost:5000";
 
 const EventHostLogin = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [animatedTickets, setAnimatedTickets] = useState([]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
     try {
       const response = await fetch(`${API_BASE_URL}/api/hosts/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
       let data;
@@ -28,30 +28,34 @@ const EventHostLogin = () => {
         data = await response.json();
       } catch (jsonError) {
         setLoading(false);
-        throw new Error(`Server error: ${response.status} ${response.statusText}. Response not in JSON format.`);
+        throw new Error(
+          `Server error: ${response.status} ${response.statusText}. Response not in JSON format.`
+        );
       }
       setLoading(false);
       if (!response.ok) {
-        throw new Error(data.message || `HTTP error! status: ${response.status}`);
+        throw new Error(
+          data.message || `HTTP error! status: ${response.status}`
+        );
       }
       // Store hostId along with token and hostInfo
-      localStorage.setItem('hostToken', data.token);
-      localStorage.setItem('hostInfo', JSON.stringify(data.host));
-      localStorage.setItem('hostId', data.host._id); // Assuming data.host._id contains the hostId
-      navigate('/create-event');
+      localStorage.setItem("hostToken", data.token);
+      localStorage.setItem("hostInfo", JSON.stringify(data.host));
+      localStorage.setItem("hostId", data.host._id); // Assuming data.host._id contains the hostId
+      navigate("/productshost");
     } catch (err) {
       setLoading(false);
-      setError(err.message || 'Login failed. Please try again.');
+      setError(err.message || "Login failed. Please try again.");
     }
   };
 
   const handleRegisterRedirect = () => {
-    navigate('/register');
+    navigate("/register");
   };
 
   useEffect(() => {
     const createTicket = () => {
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         const ticket = {
           id: Math.random(),
           x: Math.random() * window.innerWidth,
@@ -67,7 +71,7 @@ const EventHostLogin = () => {
 
     let animationId;
     const animationFrame = () => {
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         setAnimatedTickets((prevTickets) =>
           prevTickets
             .map((ticket) => {
@@ -93,7 +97,7 @@ const EventHostLogin = () => {
       animationId = requestAnimationFrame(animationFrame);
     };
 
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const numberOfTickets = 30;
       setAnimatedTickets([]);
       for (let i = 0; i < numberOfTickets; i++) {
@@ -111,19 +115,22 @@ const EventHostLogin = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-black flex items-center justify-center px-4 py-24 relative overflow-hidden">
-      <div className="absolute inset-0 z-0 pointer-events-none" aria-hidden="true">
+      <div
+        className="absolute inset-0 z-0 pointer-events-none"
+        aria-hidden="true"
+      >
         {animatedTickets.map((ticket) => (
           <span
             key={ticket.id}
             style={{
-              position: 'absolute',
+              position: "absolute",
               left: `${ticket.x}px`,
               top: `${ticket.y}px`,
               transform: `rotate(${ticket.rotation}deg)`,
               fontSize: `${ticket.size}px`,
-              color: 'rgba(209, 213, 219, 0.3)',
+              color: "rgba(209, 213, 219, 0.3)",
               opacity: 0.7,
-              transition: 'transform 0.1s linear',
+              transition: "transform 0.1s linear",
             }}
           >
             <Ticket />
@@ -174,7 +181,7 @@ const EventHostLogin = () => {
               </label>
               <div className="relative">
                 <input
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-4 pr-10 py-3 bg-white/10 border border-purple-600/30 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition duration-300 group-hover:border-purple-400"
@@ -195,7 +202,7 @@ const EventHostLogin = () => {
             <div className="text-right">
               <a
                 href="#"
-                className={`text-sm transition duration-300 ${loading ? 'text-purple-500 cursor-not-allowed' : 'text-purple-300 hover:text-purple-100 hover:underline'}`}
+                className={`text-sm transition duration-300 ${loading ? "text-purple-500 cursor-not-allowed" : "text-purple-300 hover:text-purple-100 hover:underline"}`}
                 onClick={(e) => loading && e.preventDefault()}
               >
                 Forgot Password?
@@ -204,7 +211,9 @@ const EventHostLogin = () => {
             <button
               type="submit"
               className={`w-full bg-gradient-to-r from-purple-600 to-indigo-700 text-white font-bold py-3 rounded-lg transition duration-300 flex items-center justify-center space-x-2 group ${
-                loading ? 'opacity-70 cursor-not-allowed' : 'hover:scale-105 hover:from-purple-700 hover:to-indigo-800'
+                loading
+                  ? "opacity-70 cursor-not-allowed"
+                  : "hover:scale-105 hover:from-purple-700 hover:to-indigo-800"
               }`}
               disabled={loading}
             >
@@ -216,7 +225,14 @@ const EventHostLogin = () => {
                     fill="none"
                     viewBox="0 0 24 24"
                   >
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
                     <path
                       className="opacity-75"
                       fill="currentColor"
@@ -233,11 +249,13 @@ const EventHostLogin = () => {
               )}
             </button>
             <div className="text-center pt-6 border-t border-purple-900/30">
-              <span className="text-purple-300 mr-2">Don't have an account?</span>
+              <span className="text-purple-300 mr-2">
+                Don't have an account?
+              </span>
               <button
                 type="button"
                 onClick={handleRegisterRedirect}
-                className={`font-semibold transition duration-300 ${loading ? 'text-purple-600 cursor-not-allowed' : 'text-purple-500 hover:text-purple-200 hover:underline'}`}
+                className={`font-semibold transition duration-300 ${loading ? "text-purple-600 cursor-not-allowed" : "text-purple-500 hover:text-purple-200 hover:underline"}`}
                 disabled={loading}
               >
                 Register Here

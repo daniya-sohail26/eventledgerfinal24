@@ -412,6 +412,7 @@ import React, { useState } from "react";
 import { ethers } from "ethers";
 import axios from "axios";
 import { Upload, CheckCircle, ShieldCheck, Database } from "lucide-react";
+import { Toaster, toast } from "react-hot-toast";
 
 const CONTRACT_ADDRESS = "0x48F8377e3e7b073843529F1B8FC56d9019B3Ed52";
 const CONTRACT_ABI = [
@@ -437,7 +438,7 @@ const StateRepDashboard = () => {
   const connectWallet = async () => {
     try {
       if (!window.ethereum) {
-        alert("MetaMask is not installed. Please install it.");
+        toast.error("MetaMask is not installed. Please install it.");
         return;
       }
       const provider = new ethers.BrowserProvider(window.ethereum);
@@ -445,14 +446,15 @@ const StateRepDashboard = () => {
       const address = await signer.getAddress();
       setWalletAddress(address);
       setStep(2);
+      toast.success("Wallet connected successfully!");
     } catch (error) {
       console.error("Wallet connection failed:", error);
-      alert("Failed to connect wallet.");
+      toast.error("Failed to connect wallet.");
     }
   };
 
   const uploadToPinata = async () => {
-    if (!file) return alert("Please select a file to upload");
+    if (!file) return toast.error("Please select a file to upload");
     const formData = new FormData();
     formData.append("file", file);
     try {
@@ -468,17 +470,17 @@ const StateRepDashboard = () => {
         }
       );
       setCid(res.data.IpfsHash);
-      alert("File uploaded to IPFS successfully");
+      toast.success("File uploaded to IPFS successfully");
       setStep(3);
     } catch (err) {
       console.error("Error uploading to Pinata", err);
-      alert("Error uploading file");
+      toast.error("Error uploading file");
     }
   };
 
   const storeOnChain = async () => {
-    if (!cid) return alert("Upload a file first to get a CID.");
-    if (!window.ethereum) return alert("MetaMask is required.");
+    if (!cid) return toast.error("Upload a file first to get a CID.");
+    if (!window.ethereum) return toast.error("MetaMask is required.");
     try {
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
@@ -489,11 +491,11 @@ const StateRepDashboard = () => {
       );
       const tx = await contract.uploadDocumentByStateRep(cid);
       await tx.wait();
-      alert("Document CID stored on blockchain");
+      toast.success("Document CID stored on blockchain");
       setStep(4);
     } catch (err) {
       console.error("Error storing on chain:", err);
-      alert("Transaction failed.");
+      toast.error("Transaction failed.");
     }
   };
 
@@ -525,6 +527,7 @@ const StateRepDashboard = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-gray-900 to-purple-900 text-white p-6 pt-24">
+      <Toaster position="top-right" />
       <div className="w-full max-w-xl bg-gray-800 rounded-xl shadow-2xl p-8">
         <h2 className="text-4xl font-bold mb-8 text-center text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-500">
           State Representative Dashboard
