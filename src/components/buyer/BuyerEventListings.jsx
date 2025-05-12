@@ -2,8 +2,9 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Calendar, MapPin, Ticket, Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BrowserProvider, Contract } from "ethers";
+import { BrowserProvider, Contract, ethers } from "ethers";
 import CONTRACT_ABI from "../../../src/contractcalls/TicketBuy.json"; // Update path as needed
+import axios from "axios";
 
 const categories = [
   "All",
@@ -31,6 +32,8 @@ const BuyerEventListings = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const CONTRACT_ADDRESS = "0xA56F2b81F475e58F3fee0A9Addc089aeE8bBDA9A"; // Replace with your deployed contract address
+
   // Fetch events from backend
   useEffect(() => {
     const fetchEvents = async () => {
@@ -51,7 +54,25 @@ const BuyerEventListings = () => {
         }
 
         const data = await response.json();
-        setEvents(data.events || []);
+        const eventsData = data.events || [];
+
+        // Fetch real-time ticket prices from the smart contract
+        const updatedEvents = await Promise.all(
+          eventsData.map(async (event) => {
+            try {
+              const price = await getTicketPriceFromContract(event._id);
+              return { ...event, ticketPriceETH: price };
+            } catch (err) {
+              console.error(
+                `Failed to fetch price for event ${event._id}:`,
+                err
+              );
+              return event; // Fallback to backend price if contract call fails
+            }
+          })
+        );
+
+        setEvents(updatedEvents);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -61,6 +82,25 @@ const BuyerEventListings = () => {
 
     fetchEvents();
   }, [selectedCategory, selectedEventType, searchQuery]);
+
+  // Helper function to get the current ticket price from the smart contract
+  const getTicketPriceFromContract = async (eventId) => {
+    if (!window.ethereum) {
+      throw new Error("MetaMask is not installed.");
+    }
+
+    const provider = new BrowserProvider(window.ethereum);
+    const contract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+
+    try {
+      // Adjust this based on your smart contract's function for fetching ticket price
+      const price = await contract.getTicketPrice(eventId, "Standard");
+      return ethers.formatEther(price); // Convert from wei to ETH
+    } catch (error) {
+      console.error("Error fetching ticket price from contract:", error);
+      throw error;
+    }
+  };
 
   // Helper function to get the event image
   const getEventImage = (event) => {
@@ -73,23 +113,29 @@ const BuyerEventListings = () => {
     return "https://via.placeholder.com/300x200"; // Fallback image
   };
 
-  const CONTRACT_ADDRESS = "0xA56F2b81F475e58F3fee0A9Addc089aeE8bBDA9A"; // Replace with your deployed contract address
-
   const handleBuyTicket = async (eventId, ticketType, priceETH) => {
     try {
       if (!window.ethereum) return alert("Please install MetaMask.");
-  
-      const provider = new ethers.BrowserProvider(window.ethereum);
+
+      const provider = new BrowserProvider(window.ethereum);
       const accounts = await provider.send("eth_accounts", []);
 
-if (accounts.length === 0) {
-  await provider.send("eth_requestAccounts", []);
-}
-      
+      if (accounts.length === 0) {
+        await provider.send("eth_requestAccounts", []);
+      }
+
       const signer = await provider.getSigner();
-  
       const contract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-      console.log(event.ticketType);
+
+      // Fetch the current ticket price from the smart contract
+      const currentPrice = await getTicketPriceFromContract(eventId);
+      if (parseFloat(currentPrice) !== parseFloat(priceETH)) {
+        alert(
+          `Price has changed! Current price is ${currentPrice} ETH. Please refresh and try again.`
+        );
+        return;
+      }
+
       // Prepare ticket metadata
       const buyerAddress = await signer.getAddress();
       const ticketMetadata = {
@@ -101,7 +147,7 @@ if (accounts.length === 0) {
           { trait_type: "Buyer", value: buyerAddress },
         ],
       };
-  
+
       // Upload metadata to Pinata
       const pinataResponse = await axios.post(
         "https://api.pinata.cloud/pinning/pinJSONToIPFS",
@@ -113,17 +159,17 @@ if (accounts.length === 0) {
           },
         }
       );
-  
+
       const ipfsHash = pinataResponse.data.IpfsHash;
       const metadataURI = `ipfs://${ipfsHash}`;
-  
-      // Call the smart contract
+
+      // Call the smart contract to buy the ticket
       const tx = await contract.buyTicket(eventId, ticketType, {
-        value: ethers.parseEther(priceETH.toString()),
+        value: ethers.parseEther(currentPrice.toString()),
       });
-  
+
       const receipt = await tx.wait();
-  
+
       // Store ticket + wallet in MongoDB
       await fetch("/api/tickets", {
         method: "POST",
@@ -136,11 +182,11 @@ if (accounts.length === 0) {
           metadataURI,
         }),
       });
-  
+
       alert("Ticket purchased and NFT metadata pinned to IPFS!");
     } catch (error) {
       console.error("Ticket purchase failed:", error);
-    //   alert("Failed to purchase ticket.");
+      alert(`Failed to purchase ticket: ${error.message}`);
     }
   };
 
@@ -329,17 +375,17 @@ if (accounts.length === 0) {
                     {/* Price and Buy Button */}
                     <div className="flex justify-between items-center mt-4">
                       <span className="text-lg font-bold text-pink-400">
-                        {`event.ticketPriceETH ? ${event.ticketPriceETH} ETH : event.ticketPrice ? ${event.ticketPrice} USD : event.price` ||
-                          "Free"}
+                        {event.ticketPriceETH || "N/A"} ETH
                       </span>
                       <button
-                        onClick={() =>
+                        onClick={(e) => {
+                          e.preventDefault(); // Prevent Link navigation
                           handleBuyTicket(
                             event._id,
                             "Standard",
                             event.ticketPriceETH || 0
-                          )
-                        }
+                          );
+                        }}
                         className="bg-gradient-to-br from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 text-white font-semibold py-2 px-4 rounded-xl flex items-center gap-2 shadow-md hover:scale-105 transition-transform duration-200"
                       >
                         <Ticket size={18} />

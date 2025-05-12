@@ -200,13 +200,13 @@ const EventHostLogin = () => {
               </div>
             </div>
             <div className="text-right">
-              <a
+              {/* <a
                 href="#"
                 className={`text-sm transition duration-300 ${loading ? "text-purple-500 cursor-not-allowed" : "text-purple-300 hover:text-purple-100 hover:underline"}`}
                 onClick={(e) => loading && e.preventDefault()}
               >
                 Forgot Password?
-              </a>
+              </a> */}
             </div>
             <button
               type="submit"

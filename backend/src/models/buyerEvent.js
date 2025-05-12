@@ -29,6 +29,13 @@ const eventSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Host", // Assumes a Host model for hosts
       required: [true, "Host ID is required"],
+      validate: {
+        validator: async function (value) {
+          const host = await mongoose.model("Host").findById(value);
+          return !!host;
+        },
+        message: "Invalid host ID",
+      },
     },
     eventTitle: {
       type: String,
@@ -102,7 +109,7 @@ const eventSchema = new mongoose.Schema(
       required: [true, "Ticket price in ETH is required"],
       min: [0, "Ticket price cannot be negative"],
     },
-    
+
     images: [
       {
         url: { type: String, required: true }, // URL from Cloudinary

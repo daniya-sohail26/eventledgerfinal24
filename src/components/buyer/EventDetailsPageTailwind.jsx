@@ -9,11 +9,7 @@ import {
   CiBookmark,
   CiFolderOn,
   CiFilter,
-  CiMaximize1,
-  CiZoomIn,
-  CiZoomOut,
 } from "react-icons/ci";
-import { IoLocationSharp } from "react-icons/io5";
 import { ethers } from "ethers";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -21,261 +17,276 @@ const CONTRACT_ADDRESS = "0xA58f8f070471A67B48Bb760Cf936B2C085bD591E";
 
 const TicketContractABI = [
   {
-    "inputs": [],
-    "stateMutability": "nonpayable",
-    "type": "constructor"
+    inputs: [],
+    stateMutability: "nonpayable",
+    type: "constructor",
   },
   {
-    "anonymous": false,
-    "inputs": [
+    anonymous: false,
+    inputs: [
       {
-        "indexed": true,
-        "internalType": "address",
-        "name": "buyer",
-        "type": "address"
+        indexed: true,
+        internalType: "address",
+        name: "buyer",
+        type: "address",
       },
       {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "ticketId",
-        "type": "uint256"
+        indexed: false,
+        internalType: "uint256",
+        name: "ticketId",
+        type: "uint256",
       },
       {
-        "indexed": false,
-        "internalType": "string",
-        "name": "ticketType",
-        "type": "string"
+        indexed: false,
+        internalType: "string",
+        name: "ticketType",
+        type: "string",
       },
       {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "price",
-        "type": "uint256"
+        indexed: false,
+        internalType: "uint256",
+        name: "price",
+        type: "uint256",
       },
       {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "eventId",
-        "type": "uint256"
+        indexed: false,
+        internalType: "uint256",
+        name: "eventId",
+        type: "uint256",
       },
       {
-        "indexed": false,
-        "internalType": "string",
-        "name": "nftMetadataUri",
-        "type": "string"
+        indexed: false,
+        internalType: "string",
+        name: "nftMetadataUri",
+        type: "string",
       },
       {
-        "indexed": false,
-        "internalType": "string",
-        "name": "qrCodeMetadata",
-        "type": "string"
-      }
+        indexed: false,
+        internalType: "string",
+        name: "qrCodeMetadata",
+        type: "string",
+      },
     ],
-    "name": "TicketPurchased",
-    "type": "event"
+    name: "TicketPurchased",
+    type: "event",
   },
   {
-    "anonymous": false,
-    "inputs": [
+    anonymous: false,
+    inputs: [
       {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "ticketId",
-        "type": "uint256"
+        indexed: false,
+        internalType: "uint256",
+        name: "ticketId",
+        type: "uint256",
       },
       {
-        "indexed": false,
-        "internalType": "bool",
-        "name": "isValid",
-        "type": "bool"
-      }
+        indexed: false,
+        internalType: "bool",
+        name: "isValid",
+        type: "bool",
+      },
     ],
-    "name": "TicketVerified",
-    "type": "event"
+    name: "TicketVerified",
+    type: "event",
   },
   {
-    "inputs": [
+    inputs: [
       {
-        "internalType": "uint256",
-        "name": "_eventId",
-        "type": "uint256"
+        internalType: "uint256",
+        name: "_eventId",
+        type: "uint256",
       },
       {
-        "internalType": "string",
-        "name": "_ticketType",
-        "type": "string"
+        internalType: "string",
+        name: "_ticketType",
+        type: "string",
       },
       {
-        "internalType": "string",
-        "name": "_nftMetadataUri",
-        "type": "string"
-      }
+        internalType: "string",
+        name: "_nftMetadataUri",
+        type: "string",
+      },
     ],
-    "name": "buyTicket",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
+    name: "buyTicket",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
   },
   {
-    "inputs": [
+    inputs: [
       {
-        "internalType": "string",
-        "name": "_ticketType",
-        "type": "string"
-      }
+        internalType: "string",
+        name: "_ticketType",
+        type: "string",
+      },
     ],
-    "name": "getTicketPrice",
-    "outputs": [
+    name: "getTicketPrice",
+    outputs: [
       {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
     ],
-    "stateMutability": "pure",
-    "type": "function"
+    stateMutability: "pure",
+    type: "function",
   },
   {
-    "inputs": [
+    inputs: [
       {
-        "internalType": "uint256",
-        "name": "_ticketId",
-        "type": "uint256"
+        internalType: "uint256",
+        name: "_ticketId",
+        type: "uint256",
       },
       {
-        "internalType": "string",
-        "name": "_transactionHash",
-        "type": "string"
-      }
+        internalType: "string",
+        name: "_transactionHash",
+        type: "string",
+      },
     ],
-    "name": "setTransactionHash",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
+    name: "setTransactionHash",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
   },
   {
-    "inputs": [
+    inputs: [
       {
-        "internalType": "uint256",
-        "name": "_ticketId",
-        "type": "uint256"
-      }
+        internalType: "uint256",
+        name: "_ticketId",
+        type: "uint256",
+      },
     ],
-    "name": "verifyTicket",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
+    name: "verifyTicket",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
   },
   {
-    "inputs": [],
-    "name": "withdraw",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
+    inputs: [],
+    name: "withdraw",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
   },
   {
-    "inputs": [],
-    "name": "admin",
-    "outputs": [
+    inputs: [],
+    name: "admin",
+    outputs: [
       {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
     ],
-    "stateMutability": "view",
-    "type": "function"
+    stateMutability: "view",
+    type: "function",
   },
   {
-    "inputs": [],
-    "name": "ticketCounter",
-    "outputs": [
+    inputs: [],
+    name: "ticketCounter",
+    outputs: [
       {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
     ],
-    "stateMutability": "view",
-    "type": "function"
+    stateMutability: "view",
+    type: "function",
   },
   {
-    "inputs": [
+    inputs: [
       {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
     ],
-    "name": "tickets",
-    "outputs": [
+    name: "tickets",
+    outputs: [
       {
-        "internalType": "uint256",
-        "name": "ticketId",
-        "type": "uint256"
+        internalType: "uint256",
+        name: "ticketId",
+        type: "uint256",
       },
       {
-        "internalType": "uint256",
-        "name": "eventId",
-        "type": "uint256"
+        internalType: "uint256",
+        name: "eventId",
+        type: "uint256",
       },
       {
-        "internalType": "string",
-        "name": "ticketType",
-        "type": "string"
+        internalType: "string",
+        name: "ticketType",
+        type: "string",
       },
       {
-        "internalType": "address",
-        "name": "owner",
-        "type": "address"
+        internalType: "address",
+        name: "owner",
+        type: "address",
       },
       {
-        "internalType": "string",
-        "name": "nftMetadataUri",
-        "type": "string"
+        internalType: "string",
+        name: "nftMetadataUri",
+        type: "string",
       },
       {
-        "internalType": "string",
-        "name": "transactionHash",
-        "type": "string"
+        internalType: "string",
+        name: "transactionHash",
+        type: "string",
       },
       {
-        "internalType": "uint256",
-        "name": "price",
-        "type": "uint256"
+        internalType: "uint256",
+        name: "price",
+        type: "uint256",
       },
       {
-        "internalType": "bool",
-        "name": "isVerified",
-        "type": "bool"
+        internalType: "bool",
+        name: "isVerified",
+        type: "bool",
       },
       {
-        "internalType": "uint256",
-        "name": "purchasedAt",
-        "type": "uint256"
+        internalType: "uint256",
+        name: "purchasedAt",
+        type: "uint256",
       },
       {
-        "internalType": "string",
-        "name": "qrCodeMetadata",
-        "type": "string"
-      }
+        internalType: "string",
+        name: "qrCodeMetadata",
+        type: "string",
+      },
     ],
-    "stateMutability": "view",
-    "type": "function"
-  }
+    stateMutability: "view",
+    type: "function",
+  },
 ];
 
 const EventDetailsPageTailwind = () => {
   const { eventId } = useParams();
   const [eventData, setEventData] = useState(null);
-  const [hostData, setHostData] = useState({ name: "", imageUrl: null });
+  const [hostData, setHostData] = useState({
+    name: "",
+    contactNumber: "",
+  });
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [ticketQuantity, setTicketQuantity] = useState(1);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [isInsufficientFundsOpen, setIsInsufficientFundsOpen] = useState(false);
+  const [isEventDataErrorOpen, setIsEventDataErrorOpen] = useState(false);
+  const [isMetaMaskErrorOpen, setIsMetaMaskErrorOpen] = useState(false);
+  const [isNoTicketsErrorOpen, setIsNoTicketsErrorOpen] = useState(false);
+  const [isPurchaseFailedOpen, setIsPurchaseFailedOpen] = useState(false);
+  const [isInvalidEventIdOpen, setIsInvalidEventIdOpen] = useState(false);
+  const [isTicketTypeErrorOpen, setIsTicketTypeErrorOpen] = useState(false);
+  const [isTicketIdErrorOpen, setIsTicketIdErrorOpen] = useState(false);
+  const [isTransactionFailedOpen, setIsTransactionFailedOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [purchasedTickets, setPurchasedTickets] = useState([]);
+  const [fundsMessage, setFundsMessage] = useState("");
+  const [purchaseErrorMessage, setPurchaseErrorMessage] = useState("");
+  const [transactionErrorMessage, setTransactionErrorMessage] = useState("");
 
   const API_BASE_URL = "http://localhost:5000";
   const QR_CODE_BASE_URL = "http://localhost:3000/ticket/verify";
@@ -285,36 +296,54 @@ const EventDetailsPageTailwind = () => {
       try {
         setLoading(true);
         console.log("Fetching event with ID:", eventId);
-        const response = await fetch(`${API_BASE_URL}/api/detailsEvents/${eventId}`);
-        if (!response.ok) throw new Error(`Failed to fetch event data: ${response.statusText}`);
+        const response = await fetch(
+          `${API_BASE_URL}/api/detailsEvents/${eventId}`
+        );
+        if (!response.ok)
+          throw new Error(`Failed to fetch event data: ${response.statusText}`);
         const data = await response.json();
         console.log("API response:", data);
 
         const event = data.event || data;
-        if (!event.ticketPriceETH || isNaN(event.ticketPriceETH) || event.ticketPriceETH <= 0) {
+        if (
+          !event.ticketPriceETH ||
+          isNaN(event.ticketPriceETH) ||
+          event.ticketPriceETH <= 0
+        ) {
           console.warn(
             "Event data missing or invalid ticketPriceETH, setting default based on ticketType:",
             event
           );
-          event.ticketPriceETH = event.ticketType === "General Admission" ? 0.05 : 0.1;
+          event.ticketPriceETH =
+            event.ticketType === "General Admission" ? 0.05 : 0.1;
         }
         if (!event.ticketType) {
-          console.warn("Event data missing ticketType, setting default:", event);
+          console.warn(
+            "Event data missing ticketType, setting default:",
+            event
+          );
           event.ticketType = "General Admission";
         }
         setEventData(event);
 
         try {
-          const hostResponse = await fetch(`${API_BASE_URL}/api/hosts/${event.hostId}`);
+          console.log("Fetching host with ID:", event.hostId); // Debug hostId
+          const hostResponse = await fetch(
+            `${API_BASE_URL}/api/hosts/${event.hostId}`
+          );
           if (!hostResponse.ok) throw new Error("Failed to fetch host data");
           const hostData = await hostResponse.json();
+          console.log("Host API response:", hostData); // Debug host data
           setHostData({
-            name: hostData.user?.name || "Unknown Host",
-            imageUrl: hostData.user?.imageUrl || null,
+            name: hostData.organizationName || "Unknown Host",
+            contactNumber: hostData.mobileNumber || "Contact Number",
           });
         } catch (hostErr) {
-          console.error("Host fetch error:", hostErr.message);
-          setHostData({ name: "Unknown Host", imageUrl: null });
+          console.error("Host fetch error:", hostErr.message, hostErr.stack);
+          setHostData({
+            name: "Unknown Host",
+            contactNumber: "Contact Number",
+          });
         }
       } catch (err) {
         console.error("Fetch error:", err);
@@ -350,6 +379,15 @@ const EventDetailsPageTailwind = () => {
     setTicketQuantity(1);
     setPurchasedTickets([]);
   };
+  const closeInsufficientFundsAlert = () => setIsInsufficientFundsOpen(false);
+  const closeEventDataError = () => setIsEventDataErrorOpen(false);
+  const closeMetaMaskError = () => setIsMetaMaskErrorOpen(false);
+  const closeNoTicketsError = () => setIsNoTicketsErrorOpen(false);
+  const closePurchaseFailed = () => setIsPurchaseFailedOpen(false);
+  const closeInvalidEventId = () => setIsInvalidEventIdOpen(false);
+  const closeTicketTypeError = () => setIsTicketTypeErrorOpen(false);
+  const closeTicketIdError = () => setIsTicketIdErrorOpen(false);
+  const closeTransactionFailed = () => setIsTransactionFailedOpen(false);
 
   const saveTicketToMongoDB = async (ticketData) => {
     const requiredFields = [
@@ -385,7 +423,10 @@ const EventDetailsPageTailwind = () => {
     const delay = 1000;
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        console.log(`Saving ticket metadata (Attempt ${attempt}):`, ticketDataWithQr);
+        console.log(
+          `Saving ticket metadata (Attempt ${attempt}):`,
+          ticketDataWithQr
+        );
         const response = await fetch(`${API_BASE_URL}/api/ticketMetadata`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -394,7 +435,9 @@ const EventDetailsPageTailwind = () => {
 
         if (!response.ok) {
           const errorText = await response.text();
-          throw new Error(`Failed to save ticket metadata: ${errorText || response.statusText}`);
+          throw new Error(
+            `Failed to save ticket metadata: ${errorText || response.statusText}`
+          );
         }
 
         const result = await response.json();
@@ -403,7 +446,9 @@ const EventDetailsPageTailwind = () => {
       } catch (err) {
         console.error(`Attempt ${attempt} failed:`, err.message);
         if (attempt === maxRetries) {
-          throw new Error(`Failed to save ticket after ${maxRetries} attempts: ${err.message}`);
+          throw new Error(
+            `Failed to save ticket after ${maxRetries} attempts: ${err.message}`
+          );
         }
         await new Promise((resolve) => setTimeout(resolve, delay * attempt));
       }
@@ -412,7 +457,7 @@ const EventDetailsPageTailwind = () => {
 
   const handleBuyTickets = async () => {
     if (!eventData) {
-      alert("Event data not available. Please try again later.");
+      setIsEventDataErrorOpen(true);
       return;
     }
 
@@ -440,7 +485,6 @@ const EventDetailsPageTailwind = () => {
           });
         } else {
           console.warn(`Transaction ${i + 1} failed.`);
-          alert(`Failed to purchase ticket ${i + 1}. Stopping purchase.`);
           break;
         }
       }
@@ -450,17 +494,18 @@ const EventDetailsPageTailwind = () => {
         setIsAlertOpen(true);
         closeModal();
       } else {
-        alert("No tickets were purchased. Please check your wallet balance and try again.");
+        setIsNoTicketsErrorOpen(true);
       }
     } catch (err) {
       console.error("Purchase error:", err);
-      alert(`Purchase failed: ${err.message}`);
+      setPurchaseErrorMessage(`Purchase failed: ${err.message}`);
+      setIsPurchaseFailedOpen(true);
     }
   };
 
   const purchaseTicketsOnBlockchain = async (ticketPrice) => {
     if (!window.ethereum) {
-      alert("Please install MetaMask to continue.");
+      setIsMetaMaskErrorOpen(true);
       return null;
     }
 
@@ -475,25 +520,31 @@ const EventDetailsPageTailwind = () => {
         required: ticketPrice + 0.01,
       });
       if (balance < requiredEth) {
-        alert(
+        setFundsMessage(
           `Insufficient funds. Need ${ticketPrice + 0.01} ETH (including gas). Current balance: ${ethers.formatEther(balance)} ETH.`
         );
+        setIsInsufficientFundsOpen(true);
         return null;
       }
 
-      const nftMetadataUri = "ipfs://bafkreibpdgwh5beu3iwdm3ml6ox4y35dozmexrdo34vl4rwy6s36ydfthq";
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, TicketContractABI, signer);
+      const nftMetadataUri =
+        "ipfs://bafkreibpdgwh5beu3iwdm3ml6ox4y35dozmexrdo34vl4rwy6s36ydfthq";
+      const contract = new ethers.Contract(
+        CONTRACT_ADDRESS,
+        TicketContractABI,
+        signer
+      );
 
       const parsedEventId = parseInt(eventData._id, 16);
       if (isNaN(parsedEventId) || parsedEventId <= 0) {
         console.error("Invalid event ID:", eventData._id);
-        alert("Invalid event ID. Please contact support.");
+        setIsInvalidEventIdOpen(true);
         return null;
       }
 
       if (!eventData.ticketType) {
         console.error("Ticket type is undefined:", eventData);
-        alert("Ticket type unavailable. Please contact support.");
+        setIsTicketTypeErrorOpen(true);
         return null;
       }
 
@@ -504,14 +555,21 @@ const EventDetailsPageTailwind = () => {
         value: ethers.parseEther(ticketPrice.toString()).toString(),
       });
 
-      const tx = await contract.buyTicket(parsedEventId, eventData.ticketType, nftMetadataUri, {
-        value: ethers.parseEther(ticketPrice.toString()),
-        gasLimit: 300000,
-      });
+      const tx = await contract.buyTicket(
+        parsedEventId,
+        eventData.ticketType,
+        nftMetadataUri,
+        {
+          value: ethers.parseEther(ticketPrice.toString()),
+          gasLimit: 300000,
+        }
+      );
 
       const receipt = await tx.wait();
       const ticketIdEvent = receipt.logs
-        .filter((log) => log.address.toLowerCase() === CONTRACT_ADDRESS.toLowerCase())
+        .filter(
+          (log) => log.address.toLowerCase() === CONTRACT_ADDRESS.toLowerCase()
+        )
         .map((log) => {
           try {
             return contract.interface.parseLog(log);
@@ -521,10 +579,12 @@ const EventDetailsPageTailwind = () => {
         })
         .find((event) => event && event.name === "TicketPurchased");
 
-      const ticketId = ticketIdEvent ? ticketIdEvent.args.ticketId.toNumber() : null;
+      const ticketId = ticketIdEvent
+        ? ticketIdEvent.args.ticketId.toNumber()
+        : null;
       if (!ticketId) {
         console.error("Failed to parse TicketPurchased event:", receipt.logs);
-        alert("Transaction succeeded, but ticket ID could not be retrieved.");
+        setIsTicketIdErrorOpen(true);
         return { tx, ticketId: null, nftMetadataUri };
       }
 
@@ -537,14 +597,17 @@ const EventDetailsPageTailwind = () => {
         code: err.code,
         data: err.data,
       });
-      alert(`Transaction failed: ${err.reason || err.message || "Unknown error"}`);
+      setTransactionErrorMessage(
+        `Transaction failed: ${err.reason || err.message || "Unknown error"}`
+      );
+      setIsTransactionFailedOpen(true);
       return null;
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 to-indigo-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-black via-purple-950 to-black py-16 px-6 flex items-center justify-center">
         <p className="text-white text-xl">Loading event details...</p>
       </div>
     );
@@ -552,7 +615,7 @@ const EventDetailsPageTailwind = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 to-indigo-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-black via-purple-950 to-black py-16 px-6 flex items-center justify-center">
         <p className="text-pink-400 text-xl">Error: {error}</p>
       </div>
     );
@@ -560,14 +623,14 @@ const EventDetailsPageTailwind = () => {
 
   if (!eventData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 to-indigo-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-black via-purple-950 to-black py-16 px-6 flex items-center justify-center">
         <p className="text-white text-xl">Event not found.</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 to-indigo-900 px-5 py-10 flex justify-center items-start font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-black via-purple-950 to-black py-16 px-6 flex justify-center items-start font-sans">
       <div className="bg-black/60 backdrop-blur-sm border border-white/10 rounded-2xl shadow-2xl p-8 md:p-10 max-w-4xl w-full text-gray-300">
         <div className="relative bg-gray-800 h-[200px] md:h-[300px] rounded-lg mb-8 overflow-hidden">
           {eventData.images?.length > 0 ? (
@@ -658,20 +721,6 @@ const EventDetailsPageTailwind = () => {
                     : eventData.location}
                 </span>
               </p>
-              <div className="bg-gray-900 h-[200px] rounded-md mt-4 relative flex items-center justify-center overflow-hidden">
-                <IoLocationSharp className="text-pink-500 text-5xl" />
-                <div className="absolute top-2.5 right-2.5 flex flex-col gap-1.5">
-                  <button className="bg-black/60 hover:bg-black/80 border border-white/30 rounded size-8 flex items-center justify-center text-white text-xs transition-colors">
-                    <CiZoomIn size={18} />
-                  </button>
-                  <button className="bg-black/60 hover:bg-black/80 border border-white/30 rounded size-8 flex items-center justify-center text-white text-xs transition-colors">
-                    <CiZoomOut size={18} />
-                  </button>
-                  <button className="bg-black/60 hover:bg-black/80 border border-white/30 rounded size-8 flex items-center justify-center text-white text-xs transition-colors">
-                    <CiMaximize1 size={16} />
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -686,7 +735,7 @@ const EventDetailsPageTailwind = () => {
               </p>
               <button
                 onClick={openModal}
-                className="mt-4 w-full md:w-auto bg-gradient-to-r from-pink-500 to-orange-400 text-white px-6 py-2.5 rounded-md font-semibold hover:brightness-110 transition duration-200"
+                className="mt-4 w-full md:w-auto bg-gradient-to-br from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 text-white font-semibold py-2 px-6 rounded-xl shadow-md hover:scale-105 transition-transform duration-200"
               >
                 Buy Tickets
               </button>
@@ -698,23 +747,15 @@ const EventDetailsPageTailwind = () => {
               </h2>
               <div className="flex items-center gap-4">
                 <div className="size-14 md:size-16 bg-gray-700 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
-                  {hostData.imageUrl ? (
-                    <img
-                      src={hostData.imageUrl}
-                      alt={hostData.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <CiUser className="text-3xl text-gray-400" />
-                  )}
+                  <CiUser className="text-3xl text-gray-400" />
                 </div>
                 <div className="flex flex-col gap-1">
                   <p className="font-semibold text-lg text-white">
                     {hostData.name}
                   </p>
-                  <button className="w-auto bg-gradient-to-r from-pink-500 to-orange-400 text-white px-4 py-1.5 rounded-md font-semibold text-sm hover:brightness-110 transition duration-200 self-start">
-                    Contact
-                  </button>
+                  <p className="font-semibold text-lg text-white">
+                    {hostData.contactNumber}
+                  </p>
                 </div>
               </div>
             </div>
@@ -762,7 +803,7 @@ const EventDetailsPageTailwind = () => {
                 </button>
                 <button
                   onClick={handleBuyTickets}
-                  className="px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 rounded-md hover:brightness-110 transition-colors"
+                  className="bg-gradient-to-br from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 text-white font-semibold py-2 px-6 rounded-xl shadow-md hover:scale-105 transition-transform duration-200"
                 >
                   Buy Tickets
                 </button>
@@ -788,7 +829,8 @@ const EventDetailsPageTailwind = () => {
                       id={`qr-code-${ticket.ticketId}`}
                     />
                     <p className="text-sm text-gray-400">
-                      Scan this QR code to verify the ticket or check "My Tickets".
+                      Scan this QR code to verify the ticket or check "My
+                      Tickets".
                     </p>
                   </div>
                 ))}
@@ -796,7 +838,197 @@ const EventDetailsPageTailwind = () => {
               <div className="flex justify-center">
                 <button
                   onClick={closeAlert}
-                  className="px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 rounded-md hover:brightness-110 transition-colors"
+                  className="bg-gradient-to-br from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 text-white font-semibold py-2 px-6 rounded-xl shadow-md hover:scale-105 transition-transform duration-200"
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isInsufficientFundsOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md text-white shadow-lg">
+              <p className="text-lg font-semibold text-center mb-4">
+                Insufficient Funds
+              </p>
+              <p className="text-sm text-gray-400 mb-4 text-center">
+                {fundsMessage}
+              </p>
+              <div className="flex justify-center">
+                <button
+                  onClick={closeInsufficientFundsAlert}
+                  className="bg-gradient-to-br from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 text-white font-semibold py-2 px-6 rounded-xl shadow-md hover:scale-105 transition-transform duration-200"
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isEventDataErrorOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md text-white shadow-lg">
+              <p className="text-lg font-semibold text-center mb-4">
+                Event Data Error
+              </p>
+              <p className="text-sm text-gray-400 mb-4 text-center">
+                Event data not available. Please try again later.
+              </p>
+              <div className="flex justify-center">
+                <button
+                  onClick={closeEventDataError}
+                  className="bg-gradient-to-br from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 text-white font-semibold py-2 px-6 rounded-xl shadow-md hover:scale-105 transition-transform duration-200"
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isMetaMaskErrorOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md text-white shadow-lg">
+              <p className="text-lg font-semibold text-center mb-4">
+                MetaMask Required
+              </p>
+              <p className="text-sm text-gray-400 mb-4 text-center">
+                Please install MetaMask to continue.
+              </p>
+              <div className="flex justify-center">
+                <button
+                  onClick={closeMetaMaskError}
+                  className="bg-gradient-to-br from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 text-white font-semibold py-2 px-6 rounded-xl shadow-md hover:scale-105 transition-transform duration-200"
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isNoTicketsErrorOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md text-white shadow-lg">
+              <p className="text-lg font-semibold text-center mb-4">
+                Purchase Error
+              </p>
+              <p className="text-sm text-gray-400 mb-4 text-center">
+                No tickets were purchased. Please check your wallet balance and
+                try again.
+              </p>
+              <div className="flex justify-center">
+                <button
+                  onClick={closeNoTicketsError}
+                  className="bg-gradient-to-br from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 text-white font-semibold py-2 px-6 rounded-xl shadow-md hover:scale-105 transition-transform duration-200"
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isPurchaseFailedOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md text-white shadow-lg">
+              <p className="text-lg font-semibold text-center mb-4">
+                Purchase Failed
+              </p>
+              <p className="text-sm text-gray-400 mb-4 text-center">
+                {purchaseErrorMessage}
+              </p>
+              <div className="flex justify-center">
+                <button
+                  onClick={closePurchaseFailed}
+                  className="bg-gradient-to-br from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 text-white font-semibold py-2 px-6 rounded-xl shadow-md hover:scale-105 transition-transform duration-200"
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isInvalidEventIdOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md text-white shadow-lg">
+              <p className="text-lg font-semibold text-center mb-4">
+                Invalid Event ID
+              </p>
+              <p className="text-sm text-gray-400 mb-4 text-center">
+                Invalid event ID. Please contact support.
+              </p>
+              <div className="flex justify-center">
+                <button
+                  onClick={closeInvalidEventId}
+                  className="bg-gradient-to-br from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 text-white font-semibold py-2 px-6 rounded-xl shadow-md hover:scale-105 transition-transform duration-200"
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isTicketTypeErrorOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md text-white shadow-lg">
+              <p className="text-lg font-semibold text-center mb-4">
+                Ticket Type Error
+              </p>
+              <p className="text-sm text-gray-400 mb-4 text-center">
+                Ticket type unavailable. Please contact support.
+              </p>
+              <div className="flex justify-center">
+                <button
+                  onClick={closeTicketTypeError}
+                  className="bg-gradient-to-br from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 text-white font-semibold py-2 px-6 rounded-xl shadow-md hover:scale-105 transition-transform duration-200"
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isTicketIdErrorOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-gray-800 rounded-lg p-6 wVarsity Hackathon - 2025full max-w-md text-white shadow-lg">
+              <p className="text-lg font-semibold text-center mb-4">
+                Ticket ID Error
+              </p>
+              <p className="text-sm text-gray-400 mb-4 text-center">
+                Transaction succeeded, but ticket ID could not be retrieved.
+              </p>
+              <div className="flex justify-center">
+                <button
+                  onClick={closeTicketIdError}
+                  className="bg-gradient-to-br from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 text-white font-semibold py-2 px-6 rounded-xl shadow-md hover:scale-105 transition-transform duration-200"
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isTransactionFailedOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md text-white shadow-lg">
+              <p className="text-lg font-semibold text-center mb-4">
+                Transaction Failed
+              </p>
+              <p className="text-sm text-gray-400 mb-4 text-center">
+                {transactionErrorMessage}
+              </p>
+              <div className="flex justify-center">
+                <button
+                  onClick={closeTransactionFailed}
+                  className="bg-gradient-to-br from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 text-white font-semibold py-2 px-6 rounded-xl shadow-md hover:scale-105 transition-transform duration-200"
                 >
                   OK
                 </button>

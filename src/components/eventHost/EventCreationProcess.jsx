@@ -13,9 +13,11 @@ import {
   X,
   Plus,
   Loader2,
-  DollarSign, // Added for price icon
-  Hash, // Added for supply icon
+  DollarSign,
+  Hash,
 } from "lucide-react";
+import { ToastContainer, toast } from "react-toastify"; // <-- IMPORT
+import "react-toastify/dist/ReactToastify.css"; // <-- IMPORT CSS
 
 // --- DEFINE YOUR BACKEND API URL ---
 const API_BASE_URL = "http://localhost:5000";
@@ -26,200 +28,291 @@ const initialEventDetails = {
   eventCategory: "",
   eventType: "onsite",
   startDate: "",
-  endDate: "", // <-- ADDED
+  endDate: "",
   startTime: "",
   endTime: "",
   location: "",
   eventDescription: "",
-  images: [], // Holds File objects for upload
-  ticketPrice: "", // <-- CHANGED: Top-level price (string for input)
-  ticketSupply: "", // <-- ADDED: Top-level supply (string for input)
+  images: [],
+  ticketPrice: "",
+  ticketSupply: "",
 };
 
 const EventCreationProcess = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [eventDetails, setEventDetails] = useState(initialEventDetails);
-  const [imagePreviews, setImagePreviews] = useState([]); // Holds data URLs for display
+  const [imagePreviews, setImagePreviews] = useState([]);
   const fileInputRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(null); // For general/API errors displayed in the component
+  const [fieldErrors, setFieldErrors] = useState({});
   const [animatedTickets, setAnimatedTickets] = useState([]);
 
   const steps = ["Event Details", "Images"];
 
-  // --- Generic Input Handler (Handles all text/date/time/number inputs) ---
-  const handleInputChange = (e) => {
-    const { name, value, type } = e.target;
+  // --- Validation Function ---
+  const validateForm = (stepToValidate = -1) => {
+    const newErrors = {};
+    let overallIsValid = true;
 
-    // Prevent leading zeros for number inputs unless it's '0.' for decimals
-    if (
-      type === "number" &&
-      value.length > 1 &&
-      value.startsWith("0") &&
-      !value.startsWith("0.")
-    ) {
-      // Allow '0' or '0.something', but not '01', '05' etc.
-      setEventDetails((prev) => ({
-        ...prev,
-        [name]: parseFloat(value).toString(), // Remove leading zero by parsing
-      }));
-    } else {
-      setEventDetails((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
+    if (stepToValidate === 0 || stepToValidate === -1) {
+      if (!eventDetails.eventTitle.trim())
+        newErrors.eventTitle = "Please fill this field";
+      if (!eventDetails.eventCategory)
+        newErrors.eventCategory = "Please select a category";
+      if (!eventDetails.startDate)
+        newErrors.startDate = "Please select a start date";
+      if (!eventDetails.endDate) {
+        newErrors.endDate = "Please select an end date";
+      } else if (
+        eventDetails.startDate &&
+        new Date(eventDetails.endDate) < new Date(eventDetails.startDate)
+      ) {
+        newErrors.endDate = "End date cannot be before start date";
+      }
+
+      if (!eventDetails.startTime)
+        newErrors.startTime = "Please select a start time";
+      if (!eventDetails.endTime)
+        newErrors.endTime = "Please select an end time";
+
+      if (
+        eventDetails.startDate &&
+        eventDetails.endDate &&
+        eventDetails.startTime &&
+        eventDetails.endTime
+      ) {
+        const startFullDateTime = new Date(
+          `${eventDetails.startDate}T${eventDetails.startTime}`
+        );
+        const endFullDateTime = new Date(
+          `${eventDetails.endDate}T${eventDetails.endTime}`
+        );
+        if (
+          !isNaN(startFullDateTime.getTime()) &&
+          !isNaN(endFullDateTime.getTime())
+        ) {
+          if (endFullDateTime <= startFullDateTime) {
+            const msg = "End date/time must be after start date/time.";
+            if (!newErrors.endDate) newErrors.endDate = msg;
+            if (!newErrors.endTime) newErrors.endTime = msg;
+          }
+        }
+      }
+
+      if (
+        eventDetails.eventType === "onsite" ||
+        eventDetails.eventType === "hybrid"
+      ) {
+        if (!eventDetails.location.trim())
+          newErrors.location = "Please fill this field";
+      }
+
+      if (
+        eventDetails.ticketPrice === "" ||
+        eventDetails.ticketPrice === null
+      ) {
+        newErrors.ticketPrice = "Please fill this field";
+      } else {
+        const priceNum = parseFloat(eventDetails.ticketPrice);
+        if (isNaN(priceNum) || priceNum < 0)
+          newErrors.ticketPrice = "Price must be 0 or greater";
+      }
+
+      if (
+        eventDetails.ticketSupply === "" ||
+        eventDetails.ticketSupply === null
+      ) {
+        newErrors.ticketSupply = "Please fill this field";
+      } else {
+        const supplyNum = parseInt(eventDetails.ticketSupply, 10);
+        if (isNaN(supplyNum) || supplyNum < 1)
+          newErrors.ticketSupply = "Supply must be at least 1";
+      }
     }
+
+    if (Object.keys(newErrors).length > 0) {
+      overallIsValid = false;
+    }
+    return { isValid: overallIsValid, errors: newErrors };
   };
 
-  // --- Image Upload Handler (No changes needed) ---
+  const handleInputChange = (e) => {
+    const { name, value: rawValue, type } = e.target;
+    let processedValue = rawValue;
+
+    if (
+      type === "number" &&
+      rawValue.length > 1 &&
+      rawValue.startsWith("0") &&
+      !rawValue.startsWith("0.")
+    ) {
+      processedValue = parseFloat(rawValue).toString();
+    }
+
+    setEventDetails((prev) => ({
+      ...prev,
+      [name]: processedValue,
+    }));
+
+    setFieldErrors((prevErrors) => {
+      const newErrors = { ...prevErrors };
+      let changed = false;
+      if (newErrors[name]) {
+        delete newErrors[name];
+        changed = true;
+      }
+      if (
+        name === "eventType" &&
+        rawValue === "virtual" &&
+        newErrors.location
+      ) {
+        delete newErrors.location;
+        changed = true;
+      }
+      if (
+        name === "startDate" &&
+        newErrors.endDate?.includes("before start date")
+      ) {
+        delete newErrors.endDate;
+        changed = true;
+      }
+      if (
+        (name === "startDate" || name === "startTime") &&
+        (newErrors.endDate?.includes("must be after start date/time") ||
+          newErrors.endTime?.includes("must be after start date/time"))
+      ) {
+        if (newErrors.endDate?.includes("must be after start date/time"))
+          delete newErrors.endDate;
+        if (newErrors.endTime?.includes("must be after start date/time"))
+          delete newErrors.endTime;
+        changed = true;
+      }
+      return changed ? newErrors : prevErrors;
+    });
+    setError(null); // Clear general error when user starts typing
+  };
+
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
     const currentImageCount = eventDetails.images.length;
-    const newImageFiles = []; // Keep track of actual File objects
-    const newImagePreviews = []; // Keep track of data URLs
+    const newImageFiles = [];
+    const newImagePreviews = [];
+    let imageError = null;
 
-    // Basic validation (optional: add more like size limit)
     if (files.length + currentImageCount > 5) {
-      // Example limit of 5 images
-      setError("You can upload a maximum of 5 images.");
-      return; // Stop processing if limit exceeded
+      imageError = "You can upload a maximum of 5 images.";
+      toast.error(imageError); // Use toast for image errors
+      return;
     }
 
     files.forEach((file) => {
       if (file.size > 5 * 1024 * 1024) {
-        // Example: 5MB limit
-        setError(`File "${file.name}" exceeds the 5MB size limit.`);
-        return; // Skip this file
+        imageError = `File "${file.name}" exceeds the 5MB size limit.`;
+        return;
       }
       if (
         !["image/jpeg", "image/png", "image/gif", "image/webp"].includes(
           file.type
         )
       ) {
-        setError(`File "${file.name}" has an unsupported format.`);
-        return; // Skip this file
+        imageError = `File "${file.name}" has an unsupported format.`;
+        return;
       }
 
-      newImageFiles.push(file); // Add valid File object to state list
+      newImageFiles.push(file);
       const reader = new FileReader();
       reader.onloadend = () => {
-        // Use function form of setState for preview to avoid race conditions
         setImagePreviews((prev) => [...prev, reader.result]);
       };
       reader.readAsDataURL(file);
     });
 
+    if (imageError) {
+      toast.error(imageError); // Show the first encountered image error
+      return;
+    }
+    // setError(null); // No longer using general 'error' state for image file errors
+
     if (newImageFiles.length > 0) {
       setEventDetails((prev) => ({
         ...prev,
-        images: [...prev.images, ...newImageFiles], // Store actual File objects
+        images: [...prev.images, ...newImageFiles],
       }));
     }
   };
 
-  // --- Remove Image Handler (No changes needed) ---
   const removeImage = (index) => {
     setEventDetails((prev) => ({
       ...prev,
-      images: prev.images.filter((_, i) => i !== index), // Filter File objects
+      images: prev.images.filter((_, i) => i !== index),
     }));
-    setImagePreviews((prev) => prev.filter((_, i) => i !== index)); // Filter previews
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
+    // setError(null); // No longer using general 'error' state for image file errors
   };
 
-  // --- REMOVED handleTicketChange --- (No longer needed)
+  const handleNextStep = () => {
+    setError(null);
+    const validationResult = validateForm(currentStep);
+    setFieldErrors(validationResult.errors);
 
-  // --- Function to handle final submission ---
+    if (validationResult.isValid) {
+      setCurrentStep((prev) => prev + 1);
+    } else {
+      toast.warn("Please correct the highlighted fields.", { autoClose: 2000 });
+    }
+  };
+
   const handleCreateEventSubmit = async () => {
-    setError(null); // Clear previous errors
+    setError(null);
+    setFieldErrors({});
     setIsLoading(true);
 
-    const token = localStorage.getItem("hostToken"); // Ensure you save token with this key on login
+    const token = localStorage.getItem("hostToken");
     if (!token) {
-      setError("Authentication error: Please log in again.");
+      toast.error("Authentication error: Please log in again.");
       setIsLoading(false);
       return;
     }
 
-    // --- UPDATED Frontend Validation ---
-    const requiredFields = [
-      "eventTitle",
-      "eventCategory",
-      "eventType",
-      "startDate",
-      "endDate",
-      "startTime",
-      "endTime",
-      "ticketPrice",
-      "ticketSupply",
-    ];
-    for (const field of requiredFields) {
-      if (!eventDetails[field] && eventDetails[field] !== 0) {
-        // Allow 0 for price
-        // Convert camelCase to Title Case for error message
-        const fieldName = field
-          .replace(/([A-Z])/g, " $1")
-          .replace(/^./, (str) => str.toUpperCase());
-        setError(`${fieldName} is required.`);
-        setCurrentStep(0);
-        setIsLoading(false);
-        return;
+    const validationResult = validateForm(-1);
+    setFieldErrors(validationResult.errors);
+
+    if (!validationResult.isValid) {
+      const step0Fields = [
+        "eventTitle",
+        "eventCategory",
+        "startDate",
+        "endDate",
+        "startTime",
+        "endTime",
+        "location",
+        "ticketPrice",
+        "ticketSupply",
+      ];
+      let errorOnStep0 = false;
+      for (const field of step0Fields) {
+        if (validationResult.errors[field]) {
+          errorOnStep0 = true;
+          break;
+        }
       }
-    }
+      if (errorOnStep0 && currentStep !== 0) setCurrentStep(0);
 
-    // Location validation
-    if (
-      (eventDetails.eventType === "onsite" ||
-        eventDetails.eventType === "hybrid") &&
-      !eventDetails.location
-    ) {
-      setError("Location is required for onsite or hybrid events.");
-      setCurrentStep(0);
+      toast.error("Please correct the highlighted fields before submitting.");
       setIsLoading(false);
       return;
     }
 
-    // Specific validation for numbers
-    const priceNum = parseFloat(eventDetails.ticketPrice);
-    if (isNaN(priceNum) || priceNum < 0) {
-      setError("Please enter a valid ticket price (0 or greater).");
-      setCurrentStep(0);
-      setIsLoading(false);
-      return;
-    }
-    const supplyNum = parseInt(eventDetails.ticketSupply, 10);
-    if (isNaN(supplyNum) || supplyNum < 1) {
-      setError("Please enter a valid ticket supply (must be 1 or more).");
-      setCurrentStep(0);
-      setIsLoading(false);
-      return;
-    }
-
-    // Date validation
-    const start = new Date(eventDetails.startDate);
-    const end = new Date(eventDetails.endDate);
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      setError("Invalid start or end date selected.");
-      setCurrentStep(0);
-      setIsLoading(false);
-      return;
-    }
-    if (end < start) {
-      setError("End date cannot be before the start date.");
-      setCurrentStep(0);
-      setIsLoading(false);
-      return;
-    }
-
-    // --- CORRECTED FormData Creation ---
     const formData = new FormData();
+    // ... (append form data - no changes here)
     formData.append("eventTitle", eventDetails.eventTitle);
     formData.append("eventCategory", eventDetails.eventCategory);
     formData.append("eventType", eventDetails.eventType);
     formData.append("startDate", eventDetails.startDate);
-    formData.append("endDate", eventDetails.endDate); // <-- ADDED
+    formData.append("endDate", eventDetails.endDate);
     formData.append("startTime", eventDetails.startTime);
     formData.append("endTime", eventDetails.endTime);
-    // Only append location if it's provided and relevant
     if (
       eventDetails.location &&
       (eventDetails.eventType === "onsite" ||
@@ -228,64 +321,45 @@ const EventCreationProcess = () => {
       formData.append("location", eventDetails.location);
     }
     formData.append("eventDescription", eventDetails.eventDescription);
-    formData.append("ticketPrice", eventDetails.ticketPrice); // <-- CORRECTED (using state value)
-    formData.append("ticketSupply", eventDetails.ticketSupply); // <-- ADDED
+    formData.append("ticketPrice", eventDetails.ticketPrice);
+    formData.append("ticketSupply", eventDetails.ticketSupply);
 
-    // Append images (File objects)
     eventDetails.images.forEach((file) => {
-      formData.append("images", file); // Key MUST match Multer config in backend
+      formData.append("images", file);
     });
 
-    console.log("Submitting FormData keys:"); // Debugging: Check keys before sending
-    for (let key of formData.keys()) {
-      console.log(key);
-    }
-
-    // --- Make API Request (No change needed here) ---
     try {
       const response = await fetch(`${API_BASE_URL}/api/events`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
-          // 'Content-Type': 'multipart/form-data' is set automatically by browser for FormData
         },
         body: formData,
       });
-
-      const data = await response.json(); // Attempt to parse JSON regardless of status
-
+      const data = await response.json();
       if (!response.ok) {
-        // Use message from backend response if available, otherwise generic error
-        console.error("API Error Response:", data);
         throw new Error(
           data.message || `HTTP error! Status: ${response.status}`
         );
       }
-
-      // --- Success ---
-      console.log("Event created successfully:", data.event);
-      alert("Event created successfully!"); // Simple success feedback
-
-      // Reset form
+      toast.success("Event created successfully!"); // <-- USE TOAST
       setEventDetails(initialEventDetails);
       setImagePreviews([]);
       setCurrentStep(0);
+      setFieldErrors({});
     } catch (err) {
       console.error("Event Creation Failed:", err);
-      // Display specific error from backend or fetch failure
-      setError(
+      toast.error(
         err.message || "An unexpected error occurred. Please try again."
-      );
-      // Don't reset form on error so user can fix input
+      ); // <-- USE TOAST
     } finally {
       setIsLoading(false);
     }
   };
 
-  // --- Render Step Content Function ---
   const renderStepContent = () => {
     switch (currentStep) {
-      case 0: // Event Details Step
+      case 0:
         return (
           <div className="space-y-6">
             {/* Event Title */}
@@ -299,10 +373,18 @@ const EventCreationProcess = () => {
                 name="eventTitle"
                 value={eventDetails.eventTitle}
                 onChange={handleInputChange}
-                className="w-full pl-3 pr-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-purple-500 transition-colors"
+                className={`w-full pl-3 pr-3 py-2 border-2 rounded-lg focus:outline-none transition-colors ${
+                  fieldErrors.eventTitle
+                    ? "border-red-500 focus:border-red-500"
+                    : "border-gray-200 focus:border-purple-500"
+                }`}
                 placeholder="Enter event title"
-                required={true}
               />
+              {fieldErrors.eventTitle && (
+                <p className="text-red-500 text-xs mt-1">
+                  {fieldErrors.eventTitle}
+                </p>
+              )}
             </div>
 
             {/* Event Category */}
@@ -316,13 +398,15 @@ const EventCreationProcess = () => {
                   name="eventCategory"
                   value={eventDetails.eventCategory}
                   onChange={handleInputChange}
-                  className="w-full pl-3 pr-8 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-purple-500 appearance-none bg-white"
-                  required={true}
+                  className={`w-full pl-3 pr-8 py-2 border-2 rounded-lg focus:outline-none appearance-none transition-colors ${
+                    fieldErrors.eventCategory
+                      ? "border-red-500 focus:border-red-500"
+                      : "border-gray-200 focus:border-purple-500"
+                  }`}
                 >
                   <option value="" disabled>
                     Select category...
                   </option>
-                  {/* Make sure these values match your schema enum if applicable */}
                   <option value="Music & Concerts">Music & Concerts</option>
                   <option value="Sports">Sports</option>
                   <option value="Theater & Performing Arts">
@@ -348,6 +432,11 @@ const EventCreationProcess = () => {
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none h-5 w-5" />
               </div>
+              {fieldErrors.eventCategory && (
+                <p className="text-red-500 text-xs mt-1">
+                  {fieldErrors.eventCategory}
+                </p>
+              )}
             </div>
 
             {/* Event Type */}
@@ -371,24 +460,21 @@ const EventCreationProcess = () => {
                       value={type}
                       checked={eventDetails.eventType === type}
                       onChange={handleInputChange}
-                      className="hidden" // Hide actual radio button
-                      required={true}
+                      className="hidden"
                     />
-                    {/* Capitalize first letter for display */}
                     {type.charAt(0).toUpperCase() + type.slice(1)}
                   </label>
                 ))}
               </div>
             </div>
 
-            {/* --- CORRECTED Date & Time Section --- */}
+            {/* Date & Time Section */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
                 <Clock className="mr-2 h-4 w-4 text-purple-600" />
                 Date & Time *
               </label>
               <div className="grid grid-cols-2 gap-4">
-                {/* Start Date */}
                 <div className="relative">
                   <label className="text-xs text-gray-500 absolute -top-2 left-2 bg-white px-1 z-10">
                     Start Date
@@ -398,11 +484,18 @@ const EventCreationProcess = () => {
                     name="startDate"
                     value={eventDetails.startDate}
                     onChange={handleInputChange}
-                    className="w-full relative mt-1 pl-3 pr-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-purple-500"
-                    required={true}
+                    className={`w-full relative mt-1 pl-3 pr-3 py-2 border-2 rounded-lg focus:outline-none transition-colors ${
+                      fieldErrors.startDate
+                        ? "border-red-500 focus:border-red-500"
+                        : "border-gray-200 focus:border-purple-500"
+                    }`}
                   />
+                  {fieldErrors.startDate && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {fieldErrors.startDate}
+                    </p>
+                  )}
                 </div>
-                {/* End Date - ADDED */}
                 <div className="relative">
                   <label className="text-xs text-gray-500 absolute -top-2 left-2 bg-white px-1 z-10">
                     End Date
@@ -412,12 +505,19 @@ const EventCreationProcess = () => {
                     name="endDate"
                     value={eventDetails.endDate}
                     onChange={handleInputChange}
-                    className="w-full relative mt-1 pl-3 pr-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-purple-500"
-                    required={true}
-                    min={eventDetails.startDate} // Prevent selecting end date before start
+                    min={eventDetails.startDate}
+                    className={`w-full relative mt-1 pl-3 pr-3 py-2 border-2 rounded-lg focus:outline-none transition-colors ${
+                      fieldErrors.endDate
+                        ? "border-red-500 focus:border-red-500"
+                        : "border-gray-200 focus:border-purple-500"
+                    }`}
                   />
+                  {fieldErrors.endDate && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {fieldErrors.endDate}
+                    </p>
+                  )}
                 </div>
-                {/* Start Time */}
                 <div className="relative">
                   <label className="text-xs text-gray-500 absolute -top-2 left-2 bg-white px-1 z-10">
                     Start Time
@@ -427,11 +527,18 @@ const EventCreationProcess = () => {
                     name="startTime"
                     value={eventDetails.startTime}
                     onChange={handleInputChange}
-                    className="w-full relative mt-1 pl-3 pr-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-purple-500"
-                    required={true}
+                    className={`w-full relative mt-1 pl-3 pr-3 py-2 border-2 rounded-lg focus:outline-none transition-colors ${
+                      fieldErrors.startTime
+                        ? "border-red-500 focus:border-red-500"
+                        : "border-gray-200 focus:border-purple-500"
+                    }`}
                   />
+                  {fieldErrors.startTime && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {fieldErrors.startTime}
+                    </p>
+                  )}
                 </div>
-                {/* End Time */}
                 <div className="relative">
                   <label className="text-xs text-gray-500 absolute -top-2 left-2 bg-white px-1 z-10">
                     End Time
@@ -441,9 +548,17 @@ const EventCreationProcess = () => {
                     name="endTime"
                     value={eventDetails.endTime}
                     onChange={handleInputChange}
-                    className="w-full relative mt-1 pl-3 pr-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-purple-500"
-                    required={true}
+                    className={`w-full relative mt-1 pl-3 pr-3 py-2 border-2 rounded-lg focus:outline-none transition-colors ${
+                      fieldErrors.endTime
+                        ? "border-red-500 focus:border-red-500"
+                        : "border-gray-200 focus:border-purple-500"
+                    }`}
                   />
+                  {fieldErrors.endTime && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {fieldErrors.endTime}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -462,70 +577,89 @@ const EventCreationProcess = () => {
                   value={eventDetails.location}
                   onChange={handleInputChange}
                   placeholder="Enter the venue or address"
-                  className="w-full pl-3 pr-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-purple-500"
-                  required={
-                    eventDetails.eventType === "onsite" ||
-                    eventDetails.eventType === "hybrid"
-                  }
+                  className={`w-full pl-3 pr-3 py-2 border-2 rounded-lg focus:outline-none transition-colors ${
+                    fieldErrors.location
+                      ? "border-red-500 focus:border-red-500"
+                      : "border-gray-200 focus:border-purple-500"
+                  }`}
                 />
+                {fieldErrors.location && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {fieldErrors.location}
+                  </p>
+                )}
               </div>
             )}
 
-            {/* --- CORRECTED Ticket Price & Supply Section --- */}
+            {/* Ticket Price & Supply Section */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
                 <Ticket className="mr-2 h-4 w-4 text-purple-600" />
                 Tickets *
               </label>
               <div className="grid grid-cols-2 gap-4">
-                {/* Ticket Price (ETH) */}
                 <div className="relative">
                   <label className="text-xs text-gray-500 absolute -top-2 left-2 bg-white px-1 z-10">
                     Price (ETH)
                   </label>
                   <div className="relative mt-1">
                     <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                      <DollarSign size={16} /> {/* Icon for price */}
+                      <DollarSign size={16} />
                     </span>
                     <input
                       type="number"
-                      name="ticketPrice" // <-- CORRECTED name
+                      name="ticketPrice"
                       placeholder="e.g., 0.1"
-                      value={eventDetails.ticketPrice} // <-- CORRECTED value binding
-                      onChange={handleInputChange} // <-- Use generic handler
+                      value={eventDetails.ticketPrice}
+                      onChange={handleInputChange}
                       min="0"
-                      step="any" // Allow decimals for ETH
-                      className="w-full pl-9 pr-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-purple-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      required={true}
+                      step="any"
+                      className={`w-full pl-9 pr-3 py-2 border-2 rounded-lg focus:outline-none transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                        fieldErrors.ticketPrice
+                          ? "border-red-500 focus:border-red-500"
+                          : "border-gray-200 focus:border-purple-500"
+                      }`}
                     />
                   </div>
+                  {fieldErrors.ticketPrice && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {fieldErrors.ticketPrice}
+                    </p>
+                  )}
                 </div>
-                {/* Ticket Supply - ADDED */}
                 <div className="relative">
                   <label className="text-xs text-gray-500 absolute -top-2 left-2 bg-white px-1 z-10">
                     Supply
                   </label>
                   <div className="relative mt-1">
                     <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                      <Hash size={16} /> {/* Icon for supply */}
+                      <Hash size={16} />
                     </span>
                     <input
                       type="number"
-                      name="ticketSupply" // <-- ADDED name
+                      name="ticketSupply"
                       placeholder="e.g., 100"
-                      value={eventDetails.ticketSupply} // <-- ADDED value binding
-                      onChange={handleInputChange} // <-- Use generic handler
-                      min="1" // Must be at least 1
-                      step="1" // Whole numbers only
-                      className="w-full pl-9 pr-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-purple-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      required={true}
+                      value={eventDetails.ticketSupply}
+                      onChange={handleInputChange}
+                      min="1"
+                      step="1"
+                      className={`w-full pl-9 pr-3 py-2 border-2 rounded-lg focus:outline-none transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                        fieldErrors.ticketSupply
+                          ? "border-red-500 focus:border-red-500"
+                          : "border-gray-200 focus:border-purple-500"
+                      }`}
                     />
                   </div>
+                  {fieldErrors.ticketSupply && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {fieldErrors.ticketSupply}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Additional Information (Description) */}
+            {/* Event Description */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
                 <AlignLeft className="mr-2 h-4 w-4 text-purple-600" />
@@ -541,7 +675,7 @@ const EventCreationProcess = () => {
               />
             </div>
           </div>
-        ); // End case 0
+        );
 
       case 1: // Image Upload Step
         return (
@@ -550,8 +684,6 @@ const EventCreationProcess = () => {
               <ImageIcon className="mr-2 h-4 w-4 text-purple-600" />
               Upload Images (Optional, max 5)
             </label>
-
-            {/* Image gallery/grid display */}
             {imagePreviews.length > 0 && (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-6">
                 {imagePreviews.map((preview, index) => (
@@ -559,8 +691,6 @@ const EventCreationProcess = () => {
                     key={index}
                     className="relative group aspect-w-1 aspect-h-1"
                   >
-                    {" "}
-                    {/* Aspect ratio */}
                     <img
                       src={preview}
                       alt={`Event Preview ${index + 1}`}
@@ -578,11 +708,9 @@ const EventCreationProcess = () => {
                 ))}
               </div>
             )}
-
-            {/* Upload button/area */}
             <div
               className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors ${
-                isLoading || eventDetails.images.length >= 5 // Disable if loading or max images reached
+                isLoading || eventDetails.images.length >= 5
                   ? "cursor-not-allowed bg-gray-100 border-gray-300 text-gray-400"
                   : "cursor-pointer hover:bg-purple-50 hover:border-purple-400 border-gray-300 text-gray-600"
               }`}
@@ -590,12 +718,12 @@ const EventCreationProcess = () => {
                 !isLoading &&
                 eventDetails.images.length < 5 &&
                 fileInputRef.current.click()
-              } // Prevent click when loading or max images
+              }
             >
               <input
                 type="file"
                 ref={fileInputRef}
-                accept="image/jpeg, image/png, image/gif, image/webp" // Accepted types
+                accept="image/jpeg, image/png, image/gif, image/webp"
                 onChange={handleImageUpload}
                 className="hidden"
                 multiple
@@ -603,7 +731,11 @@ const EventCreationProcess = () => {
               />
               <div className="flex flex-col items-center space-y-2">
                 <Plus
-                  className={`w-8 h-8 mx-auto ${isLoading || eventDetails.images.length >= 5 ? "text-gray-400" : "text-purple-600"}`}
+                  className={`w-8 h-8 mx-auto ${
+                    isLoading || eventDetails.images.length >= 5
+                      ? "text-gray-400"
+                      : "text-purple-600"
+                  }`}
                 />
                 <p>Click or Drag to Upload Images</p>
                 {eventDetails.images.length < 5 ? (
@@ -618,37 +750,33 @@ const EventCreationProcess = () => {
                 )}
               </div>
             </div>
-            {/* Display image-specific errors here if needed */}
-            {error && error.startsWith("File ") && (
+            {/* The 'error' state for specific file errors is now handled by toasts */}
+            {/* {error && error.startsWith("File ") && ( // This can be removed
               <p className="text-red-500 text-sm mt-2">{error}</p>
-            )}
+            )} */}
           </div>
-        ); // End case 1
-
+        );
       default:
         return null;
-    } // End switch
+    }
   };
 
-  // --- Ticket Animation Logic (Keep as is) ---
   useEffect(() => {
     if (typeof window === "undefined") return;
-    // ... (rest of animation code remains unchanged) ...
-
+    // ... (ticket animation code, no changes needed here)
     const createTicket = () => {
       const ticket = {
         id: Math.random(),
         x: Math.random() * window.innerWidth,
-        y: -30, // Start above the screen
+        y: -30,
         rotation: Math.random() * 360,
-        speedX: (Math.random() - 0.5) * 1, // Slower horizontal movement
-        speedY: Math.random() * 1 + 0.5, // Slower vertical movement
-        size: Math.random() * 15 + 10, // Slightly smaller range
+        speedX: (Math.random() - 0.5) * 1,
+        speedY: Math.random() * 1 + 0.5,
+        size: Math.random() * 15 + 10,
       };
       setAnimatedTickets((prevTickets) => {
-        // Limit number of tickets on screen for performance
         if (prevTickets.length > 50) {
-          return [...prevTickets.slice(1), ticket]; // Remove oldest, add new
+          return [...prevTickets.slice(1), ticket];
         }
         return [...prevTickets, ticket];
       });
@@ -656,46 +784,39 @@ const EventCreationProcess = () => {
 
     let animationFrameId;
     const animationFrame = () => {
-      setAnimatedTickets(
-        (prevTickets) =>
-          prevTickets
-            .map((ticket) => {
-              let newX = ticket.x + ticket.speedX;
-              let newY = ticket.y + ticket.speedY;
+      setAnimatedTickets((prevTickets) =>
+        prevTickets
+          .map((ticket) => {
+            let newX = ticket.x + ticket.speedX;
+            let newY = ticket.y + ticket.speedY;
 
-              // Boundary checks more gentle
-              if (
-                newX <= -ticket.size ||
-                newX >= window.innerWidth + ticket.size
-              ) {
-                // Reset off-screen horizontally
-                return { ...ticket, y: window.innerHeight + ticket.size }; // Mark for removal below
-              }
+            if (
+              newX <= -ticket.size ||
+              newX >= window.innerWidth + ticket.size
+            ) {
+              return { ...ticket, y: window.innerHeight + ticket.size };
+            }
 
-              if (newY > window.innerHeight + ticket.size) {
-                // Reset ticket when it goes off bottom
-                return {
-                  ...ticket,
-                  x: Math.random() * window.innerWidth,
-                  y: -ticket.size, // Reset above screen
-                  speedX: (Math.random() - 0.5) * 1,
-                  speedY: Math.random() * 1 + 0.5,
-                };
-              }
-              return { ...ticket, x: newX, y: newY };
-            })
-            .filter((ticket) => ticket.y <= window.innerHeight + ticket.size) // Filter out tickets marked for removal
+            if (newY > window.innerHeight + ticket.size) {
+              return {
+                ...ticket,
+                x: Math.random() * window.innerWidth,
+                y: -ticket.size,
+                speedX: (Math.random() - 0.5) * 1,
+                speedY: Math.random() * 1 + 0.5,
+              };
+            }
+            return { ...ticket, x: newX, y: newY };
+          })
+          .filter((ticket) => ticket.y <= window.innerHeight + ticket.size)
       );
-      // Add new tickets periodically instead of every frame
       if (Math.random() < 0.1) {
-        // ~10% chance each frame to add one
         createTicket();
       }
 
       animationFrameId = requestAnimationFrame(animationFrame);
     };
 
-    // Initial burst of tickets
     const initialTicketCount = 15;
     if (animatedTickets.length < initialTicketCount) {
       for (let i = 0; i < initialTicketCount; i++) {
@@ -710,11 +831,22 @@ const EventCreationProcess = () => {
         cancelAnimationFrame(animationFrameId);
       }
     };
-  }, []);
+  }, []); // Removed animatedTickets from dependency array
 
-  // --- Return JSX ---
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-black flex items-center justify-center p-4 sm:p-6 overflow-hidden relative">
+      <ToastContainer // <-- ADD TOAST CONTAINER
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored" // Or "light", "dark"
+      />
       {/* Ticket Animation Layer */}
       <div
         className="absolute inset-0 pointer-events-none z-0"
@@ -723,15 +855,15 @@ const EventCreationProcess = () => {
         {animatedTickets.map((ticket) => (
           <span
             key={ticket.id}
-            className="text-white opacity-40" // Reduced opacity
+            className="text-white opacity-40"
             style={{
               position: "absolute",
               left: `${ticket.x}px`,
               top: `${ticket.y}px`,
               transform: `rotate(${ticket.rotation}deg)`,
               fontSize: `${ticket.size}px`,
-              willChange: "transform, top, left", // Performance hint
-              transition: "opacity 0.5s ease-out", // Fade effect (optional)
+              willChange: "transform, top, left",
+              transition: "opacity 0.5s ease-out",
             }}
           >
             <Ticket />
@@ -744,15 +876,15 @@ const EventCreationProcess = () => {
           Create Your <span className="text-purple-600">Event</span>
         </h1>
 
-        {/* Non-file related Error Display Area */}
-        {error && !error.startsWith("File ") && (
+        {/* General Error Display Area - No longer needed if all errors are toasts or field errors */}
+        {/* {error && !error.startsWith("File ") && (
           <div
             className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md text-sm transition-opacity duration-300"
             role="alert"
           >
             <strong>Error:</strong> {error}
           </div>
-        )}
+        )} */}
 
         {/* Step Indicator */}
         <div className="flex items-center mb-8">
@@ -777,16 +909,9 @@ const EventCreationProcess = () => {
           ))}
         </div>
 
-        {/* Form Content Area */}
-        <div className="mb-8 min-h-[400px]">
-          {" "}
-          {/* Increased min height */}
-          {renderStepContent()}
-        </div>
+        <div className="mb-8 min-h-[400px]">{renderStepContent()}</div>
 
-        {/* Navigation Buttons */}
         <div className="flex justify-between items-center mt-8 pt-4 border-t border-gray-200">
-          {/* Previous Button */}
           <button
             onClick={() => setCurrentStep((prev) => prev - 1)}
             className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
@@ -800,11 +925,9 @@ const EventCreationProcess = () => {
             Previous
           </button>
 
-          {/* Next / Submit Button */}
           {currentStep < steps.length - 1 ? (
-            // Next Button
             <button
-              onClick={() => setCurrentStep((prev) => prev + 1)}
+              onClick={handleNextStep}
               className="flex items-center px-5 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isLoading}
             >
@@ -812,10 +935,9 @@ const EventCreationProcess = () => {
               <ChevronRight size={16} className="ml-1" />
             </button>
           ) : (
-            // Create Event Button (Submit)
             <button
               onClick={handleCreateEventSubmit}
-              className="flex items-center justify-center px-5 py-2 text-sm font-medium text-white bg-black rounded-lg hover:bg-gray-800 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed min-w-[120px]" // Adjusted min-width
+              className="flex items-center justify-center px-5 py-2 text-sm font-medium text-white bg-black rounded-lg hover:bg-gray-800 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed min-w-[120px]"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -829,9 +951,8 @@ const EventCreationProcess = () => {
             </button>
           )}
         </div>
-      </div>{" "}
-      {/* End Form Container */}
-    </div> // End Main Div
+      </div>
+    </div>
   );
 };
 

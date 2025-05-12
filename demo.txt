@@ -110,3 +110,16 @@ contract DocumentVerification {
         return isCIDApproved[_cid];
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+0x48F8377e3e7b073843529F1B8FC56d9019B3Ed52
