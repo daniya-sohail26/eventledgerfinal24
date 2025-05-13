@@ -1,5 +1,5 @@
 const express = require("express");
-const { getEvents } = require("../controllers/buyerEventController");
+const { getEvents, increaseTicketSupply, incrementTicketsSold, deleteEvent } = require("../controllers/buyerEventController");
 const {
   buyereventQueryValidationRules,
   handleValidationErrors,
@@ -25,5 +25,12 @@ router.get("/:id", async (req, res, next) => {
     next(error);
   }
 });
+
+// Increment ticketsSold after payment
+router.post("/:id/incrementTicketsSold", incrementTicketsSold);
+
+// Increase ticketSupply for resell
+router.post("/:id/increaseSupply", increaseTicketSupply);
+router.delete('/:eventId', deleteEvent);
 
 module.exports = router;
