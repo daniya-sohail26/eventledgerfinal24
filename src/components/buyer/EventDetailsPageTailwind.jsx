@@ -1524,7 +1524,7 @@ const EventDetailsPageTailwind = () => {
         result = { tx, ticketId, nftMetadataUri };
       } catch (contractError) {
         console.error("Contract purchase failed:", contractError);
-        toast.warn("Smart contract purchase failed. Attempting fallback payment...", {
+        toast.warn("", {
           position: "top-right",
           autoClose: 7000,
         });
