@@ -674,7 +674,7 @@ const BuyerPersonalEvents = () => {
         const errorText = await updateTicketResponse.text();
         console.error("Failed to update ticket metadata:", errorText);
         toast.error(
-          "Ticket resold on blockchain, but failed to update database. Contact support.",
+          "",
           { id: resellToast }
         );
         return;
